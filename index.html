@@ -1,0 +1,23 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Visor RDA Clínico</title>
+    <link rel="stylesheet" href="./assets/css/visor-rda.css" />
+  </head>
+  <body>
+    <main class="app-shell" id="app-shell">
+      <section class="panel identify-panel" id="identify-panel" aria-live="polite"></section>
+      <section class="panel viewer-panel hidden" id="viewer-panel">
+        <header id="patient-header" class="patient-header"></header>
+        <section id="filters-panel" class="filters-panel"></section>
+        <section class="results-layout">
+          <article class="panel-inner" id="results-panel"></article>
+          <aside class="panel-inner" id="detail-panel"></aside>
+        </section>
+      </section>
+    </main>
+    <script type="module" src="./assets/js/app.js"></script>
+  </body>
+</html>
