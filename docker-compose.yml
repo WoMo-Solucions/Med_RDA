@@ -1,0 +1,11 @@
+services:
+  med_rda:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: med_rda_fullstack
+    ports:
+      - "8086:8086"
+    volumes:
+      - ./database:/app/database
+    restart: unless-stopped
