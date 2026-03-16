@@ -6,11 +6,17 @@
    ```bash
    cd backend && npm install
    ```
-2. Iniciar servidor:
+2. Operación de BD (opcional):
    ```bash
-   node backend/server.js
+   npm run db:init
+   npm run db:seed
+   npm run db:reset
    ```
-3. Abrir en navegador:
+3. Iniciar servidor:
+   ```bash
+   node server.js
+   ```
+4. Abrir en navegador:
    - Standalone: `http://localhost:8086/index.html?mode=standalone`
    - SAP por query params: `http://localhost:8086/index.html?mode=sap&documentType=CC&documentNumber=12345678`
 
@@ -27,10 +33,12 @@
 ## Base local y seed automático
 
 - La base SQLite queda en `database/med_rda.sqlite`.
-- El backend ejecuta seed automático al iniciar (5 pacientes, 4+ RDA por paciente).
+- El backend ejecuta `ensureSeeded` al iniciar (si la BD está vacía, la siembra).
+- Para escenarios demo detallados, revisar `TEST_DATA.md`.
 
 ## Endpoints simulados (flujo ministerio)
 
+- `GET /api/document-types`
 - `POST /api/query-patient`
 - `POST /api/patient-rda`
 - `POST /api/fhir-summary`

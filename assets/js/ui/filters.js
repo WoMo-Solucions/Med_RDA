@@ -29,6 +29,7 @@ export function renderFilters(container, rdaTypes, defaultFilters, callbacks) {
 
   const form = container.querySelector('#filters-form');
   form.elements.rdaType.value = defaultFilters.rdaType || '';
+
   form.addEventListener('submit', (event) => {
     event.preventDefault();
     const data = new FormData(form);

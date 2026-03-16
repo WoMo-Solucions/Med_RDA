@@ -68,13 +68,14 @@ async function getRdaDetail(db, recordCode) {
 
   if (!base) return null;
 
-  const [diagnoses, procedures, medications, observations, documents, timeline] = await Promise.all([
+  const [diagnoses, procedures, medications, observations, documents, timeline, composition] = await Promise.all([
     all(db, 'SELECT code, description FROM diagnoses WHERE record_id = ?', [base.id]),
     all(db, 'SELECT code, description FROM procedures WHERE record_id = ?', [base.id]),
     all(db, 'SELECT name, dosage FROM medications WHERE record_id = ?', [base.id]),
     all(db, 'SELECT note FROM observations WHERE record_id = ?', [base.id]),
     all(db, 'SELECT name, reference FROM attachments WHERE record_id = ?', [base.id]),
-    all(db, 'SELECT event_time AS time, event_text AS event FROM timeline_events WHERE record_id = ? ORDER BY id ASC', [base.id])
+    all(db, 'SELECT event_time AS time, event_text AS event FROM timeline_events WHERE record_id = ? ORDER BY id ASC', [base.id]),
+    get(db, 'SELECT profile, status, notes FROM composition_documents WHERE record_id = ?', [base.id])
   ]);
 
   return {
@@ -84,7 +85,8 @@ async function getRdaDetail(db, recordCode) {
     medications,
     observations,
     documents,
-    timeline
+    timeline,
+    composition: composition || null
   };
 }
 
