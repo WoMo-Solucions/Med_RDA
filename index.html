@@ -10,12 +10,11 @@
     <main class="app-shell" id="app-shell">
       <section class="panel identify-panel" id="identify-panel" aria-live="polite"></section>
       <section class="panel viewer-panel hidden" id="viewer-panel">
+        <section id="search-panel" class="filters-panel"></section>
         <header id="patient-header" class="patient-header"></header>
         <section id="filters-panel" class="filters-panel"></section>
-        <section class="results-layout">
-          <article class="panel-inner" id="results-panel"></article>
-          <aside class="panel-inner" id="detail-panel"></aside>
-        </section>
+        <article class="panel-inner" id="results-panel"></article>
+        <article class="panel-inner" id="detail-panel"></article>
       </section>
     </main>
     <script type="module" src="./assets/js/app.js"></script>

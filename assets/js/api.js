@@ -1,75 +1,51 @@
-const MOCK_FILE = './assets/data/mock-rda.json';
+const API_BASE = '/api';
 
-async function loadMockData() {
-  const response = await fetch(MOCK_FILE);
-  if (!response.ok) {
-    throw new Error(`No se pudo cargar el mock de RDA: ${response.status}`);
+async function apiRequest(path, payload, method = 'POST') {
+  const response = await fetch(`${API_BASE}${path}`, {
+    method,
+    headers: { 'Content-Type': 'application/json' },
+    body: method === 'GET' ? undefined : JSON.stringify(payload || {})
+  });
+
+  const data = await response.json().catch(() => ({}));
+  if (!response.ok || !data.success) {
+    throw new Error(data.error || `Error HTTP ${response.status}`);
   }
-  return response.json();
+  return data.data;
 }
 
-export async function loadPatientRdas(patientContext) {
-  if (!patientContext?.documentType || !patientContext?.documentNumber) {
-    throw new Error('Contexto de paciente incompleto.');
-  }
-
-  const data = await loadMockData();
-  const patient = data.patients.find(
-    (candidate) =>
-      candidate.documentType === patientContext.documentType &&
-      candidate.documentNumber === patientContext.documentNumber
-  );
-
-  if (!patient) {
-    return { patient: null, rdas: [] };
-  }
-
-  return {
-    patient,
-    rdas: Array.isArray(patient.rdas) ? patient.rdas : []
-  };
+export async function loadDocumentTypes() {
+  return apiRequest('/document-types', null, 'GET');
 }
 
-export function applyFilters(rdas, filters) {
-  const safeRows = Array.isArray(rdas) ? rdas : [];
-  const normalizedSearch = (filters.searchText || '').trim().toLowerCase();
+export async function getPatientContext(context) {
+  return apiRequest('/query-patient', {
+    documentType: context.documentType,
+    documentNumber: context.documentNumber
+  });
+}
 
-  return safeRows.filter((item) => {
-    const attentionDate = item.attentionDate || '';
-    const matchesFrom = !filters.fromDate || attentionDate >= filters.fromDate;
-    const matchesTo = !filters.toDate || attentionDate <= filters.toDate;
-    const matchesType = !filters.rdaType || item.type === filters.rdaType;
-    const matchesEntity = !filters.entity || item.entity === filters.entity;
+export async function loadPatientRdas(patientContext, filters = {}) {
+  return apiRequest('/patient-rda', {
+    documentType: patientContext.documentType,
+    documentNumber: patientContext.documentNumber,
+    rdaType: filters.rdaType || '',
+    fromDate: filters.fromDate || '',
+    toDate: filters.toDate || ''
+  });
+}
 
-    const mainProcedure = item.mainProcedure || '';
-    const matchesProcedure =
-      !filters.procedure || mainProcedure.toLowerCase().includes(filters.procedure.toLowerCase());
+export async function loadCompositionDocument(recordCode) {
+  return apiRequest('/composition-document', { recordCode });
+}
 
-    const searchableText = [
-      item.mainDiagnosis,
-      item.mainProcedure,
-      item.entity,
-      item.serviceProfessional,
-      ...(item.observations || []),
-      item.clinicalSummary
-    ]
-      .filter(Boolean)
-      .join(' ')
-      .toLowerCase();
-
-    const matchesText = !normalizedSearch || searchableText.includes(normalizedSearch);
-
-    return matchesFrom && matchesTo && matchesType && matchesEntity && matchesProcedure && matchesText;
+export async function loadFhirSummary(patientContext) {
+  return apiRequest('/fhir-summary', {
+    documentType: patientContext.documentType,
+    documentNumber: patientContext.documentNumber
   });
 }
 
 export function clearFilters() {
-  return {
-    fromDate: '',
-    toDate: '',
-    rdaType: '',
-    entity: '',
-    procedure: '',
-    searchText: ''
-  };
+  return { fromDate: '', toDate: '', rdaType: '' };
 }

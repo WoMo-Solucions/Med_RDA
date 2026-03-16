@@ -123,12 +123,6 @@ button.secondary {
   margin-top: 0.7rem;
 }
 
-.results-layout {
-  display: grid;
-  grid-template-columns: 1.65fr 1fr;
-  gap: 0.9rem;
-}
-
 .panel-inner {
   padding: 0.8rem;
 }
@@ -182,6 +176,14 @@ button.secondary {
   border-radius: 8px;
 }
 
+
+.search-header-form {
+  display: grid;
+  grid-template-columns: 1fr 1fr auto;
+  gap: 0.75rem;
+  align-items: end;
+}
+
 @media (max-width: 920px) {
-  .results-layout { grid-template-columns: 1fr; }
+  .search-header-form { grid-template-columns: 1fr; }
 }

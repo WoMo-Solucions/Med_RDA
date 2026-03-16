@@ -1,6 +1,13 @@
 import { MODES, getRuntimeMode } from './config.js';
 import { getState, resetFilters, updateFilters, updateState } from './state.js';
-import { applyFilters, clearFilters, loadPatientRdas } from './api.js';
+import {
+  clearFilters,
+  getPatientContext,
+  loadCompositionDocument,
+  loadDocumentTypes,
+  loadFhirSummary,
+  loadPatientRdas
+} from './api.js';
 import { getPatientContext as getSapPatientContext } from './adapters/sap-adapter.js';
 import { getPatientContext as getStandaloneContext } from './adapters/standalone-adapter.js';
 import { renderFilters } from './ui/filters.js';
@@ -9,119 +16,106 @@ import { renderResults } from './ui/results.js';
 import {
   renderIdentifyForm,
   renderPatientHeader,
+  renderPersistentSearch,
   setViewerVisibility,
   showIdentifyMessage
 } from './ui/layout.js';
 
 const identifyPanel = document.getElementById('identify-panel');
+const searchPanel = document.getElementById('search-panel');
 const patientHeader = document.getElementById('patient-header');
 const filtersPanel = document.getElementById('filters-panel');
 const resultsPanel = document.getElementById('results-panel');
 const detailPanel = document.getElementById('detail-panel');
 
-function getFilterOptions(rdas) {
-  return {
-    types: [...new Set(rdas.map((item) => item.type).filter(Boolean))],
-    entities: [...new Set(rdas.map((item) => item.entity).filter(Boolean))]
-  };
+function getRdaTypes(rdas) {
+  return [...new Set((rdas || []).map((item) => item.type).filter(Boolean))];
 }
 
-function syncMainView() {
-  const state = getState();
-  renderPatientHeader(patientHeader, state.patient);
-
-  renderFilters(filtersPanel, getFilterOptions(state.allRdas), state.filters, {
-    onSearch: (filters) => {
-      updateFilters(filters);
-      const current = getState();
-      const filtered = applyFilters(current.allRdas, current.filters);
-      updateState({ filteredRdas: filtered, selectedRdaId: filtered[0]?.id || null });
-      syncResultAndDetail();
-    },
-    onClear: () => {
-      resetFilters();
-      const initialFilters = clearFilters();
-      updateFilters(initialFilters);
-      const current = getState();
-      updateState({ filteredRdas: [...current.allRdas], selectedRdaId: current.allRdas[0]?.id || null });
-      syncMainView();
-    }
-  });
-
-  syncResultAndDetail();
-}
-
-function syncResultAndDetail() {
-  const state = getState();
-  renderResults(resultsPanel, state.filteredRdas, (id) => {
-    updateState({ selectedRdaId: id });
-    syncResultAndDetail();
-  });
-
-  const selected = state.filteredRdas.find((item) => item.id === state.selectedRdaId) || null;
-  renderDetail(detailPanel, selected);
-}
-
-async function loadAndRender(patientContext) {
+async function loadPatientFlow(context, applyCurrentFilters = false) {
   try {
-    const { patient, rdas } = await loadPatientRdas(patientContext);
-    if (!patient) {
-      showIdentifyMessage('Paciente no encontrado en mock local.', true);
-      return;
+    const patient = await getPatientContext(context);
+    const state = getState();
+    const filters = applyCurrentFilters ? state.filters : clearFilters();
+    if (!applyCurrentFilters) {
+      resetFilters();
+      updateFilters(filters);
     }
 
-    updateState({
-      patient,
-      allRdas: rdas,
-      filteredRdas: [...rdas],
-      selectedRdaId: rdas[0]?.id || null
+    const { rdas } = await loadPatientRdas(patient, filters);
+    const { summary } = await loadFhirSummary(patient);
+
+    updateState({ patient, allRdas: rdas, selectedRda: null });
+    setViewerVisibility(true);
+    showIdentifyMessage('');
+
+    renderPersistentSearch(searchPanel, state.documentTypes, patient, async (payload) => {
+      const nextContext = getStandaloneContext(payload);
+      await loadPatientFlow(nextContext, false);
     });
 
-    setViewerVisibility(true);
-    syncMainView();
+    renderPatientHeader(patientHeader, patient, summary);
+    renderFilters(filtersPanel, getRdaTypes(rdas), getState().filters, {
+      onSearch: async (newFilters) => {
+        updateFilters(newFilters);
+        await loadPatientFlow(patient, true);
+      },
+      onClear: async () => {
+        resetFilters();
+        updateFilters(clearFilters());
+        await loadPatientFlow(patient, true);
+      }
+    });
+
+    renderResults(resultsPanel, rdas, async (recordCode) => {
+      const detail = await loadCompositionDocument(recordCode);
+      updateState({ selectedRda: detail });
+      renderDetail(detailPanel, detail);
+    });
+
+    renderDetail(detailPanel, null);
   } catch (error) {
     console.error(error);
-    showIdentifyMessage('No fue posible consultar RDA. Revise la consola.', true);
+    showIdentifyMessage(error.message || 'Error en la consulta.', true);
   }
 }
 
 function initStandalone() {
-  renderIdentifyForm(identifyPanel, async (formValues) => {
-    const patientContext = getStandaloneContext(formValues);
-    await loadAndRender(patientContext);
+  const state = getState();
+  renderIdentifyForm(identifyPanel, state.documentTypes, async (formValues) => {
+    const context = getStandaloneContext(formValues);
+    await loadPatientFlow(context, false);
   });
   setViewerVisibility(false);
 }
 
 async function initSap() {
   const searchParams = new URLSearchParams(window.location.search);
-  const patientContext = getSapPatientContext(searchParams);
-  if (!patientContext) {
-    renderIdentifyForm(identifyPanel, async (formValues) => {
-      const fallbackContext = getStandaloneContext(formValues);
-      await loadAndRender(fallbackContext);
-    });
-    showIdentifyMessage('Modo SAP sin contexto válido. Use SAP_CONTEXT o query params.', true);
-    setViewerVisibility(false);
+  const context = getSapPatientContext(searchParams);
+  if (!context) {
+    initStandalone();
+    showIdentifyMessage('Modo SAP sin contexto válido.', true);
     return;
   }
-
-  setViewerVisibility(true);
-  await loadAndRender(patientContext);
+  await loadPatientFlow(context, false);
 }
 
 async function boot() {
-  const hasSapContext = Boolean(window.SAP_CONTEXT);
   const searchParams = new URLSearchParams(window.location.search);
+  const hasSapContext = Boolean(window.SAP_CONTEXT);
   const mode = getRuntimeMode(searchParams, hasSapContext);
-  updateState({ mode });
+
+  const documentTypes = await loadDocumentTypes();
+  updateState({ mode, documentTypes });
 
   if (mode === MODES.SAP) {
     await initSap();
-    return;
+  } else {
+    initStandalone();
   }
-
-  initStandalone();
 }
 
-boot();
+boot().catch((error) => {
+  console.error(error);
+  showIdentifyMessage('Error de inicialización del visor.', true);
+});

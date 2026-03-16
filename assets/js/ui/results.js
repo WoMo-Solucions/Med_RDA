@@ -15,38 +15,38 @@ export function renderResults(container, rdas, onSelect) {
         <td>${escapeHtml(rda.attentionDate)}</td>
         <td>${escapeHtml(rda.type)}</td>
         <td>${escapeHtml(rda.entity)}</td>
+        <td>${escapeHtml(rda.serviceProfessional)}</td>
         <td>${escapeHtml(rda.mainDiagnosis)}</td>
         <td>${escapeHtml(rda.mainProcedure)}</td>
-        <td>${escapeHtml(rda.serviceProfessional)}</td>
-        <td><button type="button" data-id="${escapeHtml(rda.id)}" class="secondary btn-detail">Ver detalle</button></td>
+        <td>${escapeHtml(rda.documentClass || 'N/A')}</td>
+        <td><button type="button" data-code="${escapeHtml(rda.recordCode)}" class="secondary btn-detail">Visualizar</button></td>
       </tr>`
     )
     .join('');
 
   container.innerHTML = `
     <div class="results-head">
-      <h3>Resultados RDA</h3>
-      <span class="tag">${(rdas || []).length} encontrados</span>
+      <h3>Listado de atenciones RDA</h3>
+      <span class="tag">${(rdas || []).length} registros</span>
     </div>
-    <div class="table-wrap">
-      <table class="results-table">
-        <thead>
-          <tr>
-            <th>Fecha atención</th>
-            <th>Tipo RDA</th>
-            <th>Entidad</th>
-            <th>Diagnóstico principal</th>
-            <th>Procedimiento principal</th>
-            <th>Servicio / Profesional</th>
-            <th>Acción</th>
-          </tr>
-        </thead>
-        <tbody>${rows || '<tr><td colspan="7" class="text-muted">Sin resultados para los filtros seleccionados.</td></tr>'}</tbody>
-      </table>
-    </div>
+    <table class="results-table">
+      <thead>
+        <tr>
+          <th>Fecha</th>
+          <th>Tipo RDA</th>
+          <th>Entidad</th>
+          <th>Servicio / Ámbito</th>
+          <th>Diagnóstico</th>
+          <th>Procedimiento</th>
+          <th>Clase documental</th>
+          <th>Acción</th>
+        </tr>
+      </thead>
+      <tbody>${rows || '<tr><td colspan="8" class="text-muted">Sin resultados para el paciente.</td></tr>'}</tbody>
+    </table>
   `;
 
   container.querySelectorAll('.btn-detail').forEach((button) => {
-    button.addEventListener('click', () => onSelect(button.dataset.id));
+    button.addEventListener('click', () => onSelect(button.dataset.code));
   });
 }

@@ -1,16 +1,13 @@
 const state = {
   mode: 'standalone',
   patient: null,
+  documentTypes: [],
   allRdas: [],
-  filteredRdas: [],
-  selectedRdaId: null,
+  selectedRda: null,
   filters: {
     fromDate: '',
     toDate: '',
-    rdaType: '',
-    entity: '',
-    procedure: '',
-    searchText: ''
+    rdaType: ''
   }
 };
 
@@ -30,9 +27,6 @@ export function resetFilters() {
   state.filters = {
     fromDate: '',
     toDate: '',
-    rdaType: '',
-    entity: '',
-    procedure: '',
-    searchText: ''
+    rdaType: ''
   };
 }

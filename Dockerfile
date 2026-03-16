@@ -1,10 +1,12 @@
-FROM nginx:1.27-alpine
+FROM node:20-alpine
 
-WORKDIR /usr/share/nginx/html
+WORKDIR /app
 
-COPY nginx.conf /etc/nginx/conf.d/default.conf
-COPY index.html ./index.html
-COPY assets ./assets
-COPY RUN_LOCAL.md ./RUN_LOCAL.md
+COPY backend/package.json ./backend/package.json
+RUN cd backend && npm install --omit=dev
 
-EXPOSE 80
+COPY . .
+
+EXPOSE 8086
+
+CMD ["node", "backend/server.js"]
