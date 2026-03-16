@@ -1,0 +1,9 @@
+services:
+  med_rda:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: med_rda_frontend
+    ports:
+      - "8086:80"
+    restart: unless-stopped
