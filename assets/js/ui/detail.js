@@ -1,3 +1,5 @@
+import { RDA_FIELD_LABELS } from '../rda-schema.js';
+
 function escapeHtml(value) {
   return String(value ?? '')
     .replaceAll('&', '&amp;')
@@ -7,9 +9,43 @@ function escapeHtml(value) {
     .replaceAll("'", '&#39;');
 }
 
-function listOrEmpty(items, renderer) {
-  if (!items?.length) return '<li class="text-muted">No registrado.</li>';
-  return items.map(renderer).join('');
+function renderFieldValue(field) {
+  if (!Array.isArray(field.value)) {
+    return escapeHtml(field.value || 'No registrado.');
+  }
+
+  if (!field.value.length) {
+    return '<li class="text-muted">No registrado.</li>';
+  }
+
+  return field.value
+    .map((item) => {
+      if (field.key === 'diagnoses' || field.key === 'procedures') {
+        return `<li>${escapeHtml(item.code)} - ${escapeHtml(item.description)}</li>`;
+      }
+      if (field.key === 'medications') {
+        return `<li>${escapeHtml(item.name)} (${escapeHtml(item.dosage || 'N/A')})</li>`;
+      }
+      if (field.key === 'observations') {
+        return `<li>${escapeHtml(item.note)}</li>`;
+      }
+      if (field.key === 'documents') {
+        return `<li>${escapeHtml(item.name)} - ${escapeHtml(item.reference)}</li>`;
+      }
+      if (field.key === 'timeline') {
+        return `<li>${escapeHtml(item.time)} - ${escapeHtml(item.event)}</li>`;
+      }
+      return `<li>${escapeHtml(JSON.stringify(item))}</li>`;
+    })
+    .join('');
+}
+
+export function showDetailModal() {
+  document.getElementById('detail-modal').classList.remove('hidden');
+}
+
+export function closeDetailModal() {
+  document.getElementById('detail-modal').classList.add('hidden');
 }
 
 export function renderDetail(container, rda) {
@@ -18,19 +54,19 @@ export function renderDetail(container, rda) {
     return;
   }
 
+  const groups = (rda.groups || []).map((group) => `
+    <section class="detail-group">
+      <h4>${escapeHtml(group.title)}</h4>
+      ${group.fields
+        .map((field) => `
+        <div><strong>${escapeHtml(RDA_FIELD_LABELS[field.key] || field.key)}</strong><ul>${renderFieldValue(field)}</ul></div>
+      `)
+        .join('')}
+    </section>
+  `);
+
   container.innerHTML = `
-    <h3>Detalle RDA - ${escapeHtml(rda.recordCode)}</h3>
-    <p><strong>Resumen:</strong> ${escapeHtml(rda.clinicalSummary || 'Sin resumen clínico.')}</p>
-    <div class="detail-list">
-      <div><strong>Entidad:</strong> ${escapeHtml(rda.entity || 'N/A')}</div>
-      <div><strong>Fecha:</strong> ${escapeHtml(rda.attentionDate || 'N/A')}</div>
-      <div><strong>Servicio/Profesional:</strong> ${escapeHtml(rda.serviceProfessional || 'N/A')}</div>
-      <div><strong>Diagnósticos</strong><ul>${listOrEmpty(rda.diagnoses, (d) => `<li>${escapeHtml(d.code)} - ${escapeHtml(d.description)}</li>`)}</ul></div>
-      <div><strong>Procedimientos</strong><ul>${listOrEmpty(rda.procedures, (p) => `<li>${escapeHtml(p.code)} - ${escapeHtml(p.description)}</li>`)}</ul></div>
-      <div><strong>Medicamentos</strong><ul>${listOrEmpty(rda.medications, (m) => `<li>${escapeHtml(m.name)} (${escapeHtml(m.dosage || 'N/A')})</li>`)}</ul></div>
-      <div><strong>Observaciones</strong><ul>${listOrEmpty(rda.observations, (o) => `<li>${escapeHtml(o.note)}</li>`)}</ul></div>
-      <div><strong>Anexos</strong><ul>${listOrEmpty(rda.documents, (d) => `<li>${escapeHtml(d.name)} - ${escapeHtml(d.reference)}</li>`)}</ul></div>
-      <div><strong>Línea de tiempo</strong><ul>${listOrEmpty(rda.timeline, (t) => `<li>${escapeHtml(t.time)} - ${escapeHtml(t.event)}</li>`)}</ul></div>
-    </div>
+    <h3>${escapeHtml(rda.typeLabel || rda.type)} - ${escapeHtml(rda.recordCode)}</h3>
+    ${groups.join('')}
   `;
 }

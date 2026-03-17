@@ -13,90 +13,181 @@
         {
           "id": "rda-1001",
           "attentionDate": "2025-01-15",
-          "type": "Urgencias",
+          "type": "RDA_URGENCIAS",
           "entity": "Clínica Santa Aurora",
           "mainDiagnosis": "Infección respiratoria aguda",
           "mainProcedure": "Nebulización con broncodilatador",
           "serviceProfessional": "Urgencias - Dra. Paula Sánchez",
           "clinicalSummary": "Paciente con disnea leve y tos productiva de 4 días de evolución.",
-          "diagnoses": ["J06.9", "R05"],
-          "procedures": ["Nebulización", "Oximetría de pulso"],
-          "medications": ["Salbutamol", "Acetaminofén"],
-          "observations": ["Buena respuesta al manejo", "Alta con signos de alarma"],
+          "diagnoses": [
+            "J06.9",
+            "R05"
+          ],
+          "procedures": [
+            "Nebulización",
+            "Oximetría de pulso"
+          ],
+          "medications": [
+            "Salbutamol",
+            "Acetaminofén"
+          ],
+          "observations": [
+            "Buena respuesta al manejo",
+            "Alta con signos de alarma"
+          ],
           "documents": [
-            { "name": "Epicrisis", "reference": "DOC-URG-20250115-01" },
-            { "name": "Orden médica", "reference": "ORD-20250115-05" }
+            {
+              "name": "Epicrisis",
+              "reference": "DOC-URG-20250115-01"
+            },
+            {
+              "name": "Orden médica",
+              "reference": "ORD-20250115-05"
+            }
           ],
           "timeline": [
-            { "time": "08:20", "event": "Ingreso y triage" },
-            { "time": "08:55", "event": "Atención médica" },
-            { "time": "09:30", "event": "Alta con recomendaciones" }
+            {
+              "time": "08:20",
+              "event": "Ingreso y triage"
+            },
+            {
+              "time": "08:55",
+              "event": "Atención médica"
+            },
+            {
+              "time": "09:30",
+              "event": "Alta con recomendaciones"
+            }
           ]
         },
         {
           "id": "rda-1002",
           "attentionDate": "2025-02-12",
-          "type": "Consulta externa",
+          "type": "RDA_CONSULTA_EXTERNA",
           "entity": "Centro Médico Horizonte",
           "mainDiagnosis": "Hipertensión arterial esencial",
           "mainProcedure": "Control de presión arterial",
           "serviceProfessional": "Medicina interna - Dr. Juan Salazar",
           "clinicalSummary": "Control de HTA con ajuste farmacológico y educación en adherencia.",
-          "diagnoses": ["I10"],
-          "procedures": ["Toma de presión arterial", "Consejería clínica"],
-          "medications": ["Losartán 50 mg"],
-          "observations": ["Se sugiere reducir sodio", "Control en 30 días"],
+          "diagnoses": [
+            "I10"
+          ],
+          "procedures": [
+            "Toma de presión arterial",
+            "Consejería clínica"
+          ],
+          "medications": [
+            "Losartán 50 mg"
+          ],
+          "observations": [
+            "Se sugiere reducir sodio",
+            "Control en 30 días"
+          ],
           "documents": [
-            { "name": "Resumen consulta", "reference": "DOC-CE-20250212-03" }
+            {
+              "name": "Resumen consulta",
+              "reference": "DOC-CE-20250212-03"
+            }
           ],
           "timeline": [
-            { "time": "14:05", "event": "Control de signos vitales" },
-            { "time": "14:30", "event": "Evaluación clínica" }
+            {
+              "time": "14:05",
+              "event": "Control de signos vitales"
+            },
+            {
+              "time": "14:30",
+              "event": "Evaluación clínica"
+            }
           ]
         },
         {
           "id": "rda-1003",
           "attentionDate": "2025-03-04",
-          "type": "Hospitalización",
+          "type": "RDA_HOSPITALIZACION",
           "entity": "Hospital San Gabriel",
           "mainDiagnosis": "Colecistitis aguda",
           "mainProcedure": "Colecistectomía laparoscópica",
           "serviceProfessional": "Cirugía general - Dr. Andrés Peña",
           "clinicalSummary": "Ingreso por dolor abdominal intenso; intervención quirúrgica sin complicaciones.",
-          "diagnoses": ["K81.0"],
-          "procedures": ["Colecistectomía laparoscópica", "Valoración preanestésica"],
-          "medications": ["Cefazolina", "Ketorolaco"],
-          "observations": ["Evolución favorable", "Egreso a las 48 horas"],
+          "diagnoses": [
+            "K81.0"
+          ],
+          "procedures": [
+            "Colecistectomía laparoscópica",
+            "Valoración preanestésica"
+          ],
+          "medications": [
+            "Cefazolina",
+            "Ketorolaco"
+          ],
+          "observations": [
+            "Evolución favorable",
+            "Egreso a las 48 horas"
+          ],
           "documents": [
-            { "name": "Reporte quirúrgico", "reference": "DOC-HOSP-20250304-11" },
-            { "name": "Consentimiento informado", "reference": "CNST-20250304-01" }
+            {
+              "name": "Reporte quirúrgico",
+              "reference": "DOC-HOSP-20250304-11"
+            },
+            {
+              "name": "Consentimiento informado",
+              "reference": "CNST-20250304-01"
+            }
           ],
           "timeline": [
-            { "time": "06:40", "event": "Ingreso hospitalario" },
-            { "time": "10:15", "event": "Cirugía" },
-            { "time": "17:10", "event": "Traslado a recuperación" }
+            {
+              "time": "06:40",
+              "event": "Ingreso hospitalario"
+            },
+            {
+              "time": "10:15",
+              "event": "Cirugía"
+            },
+            {
+              "time": "17:10",
+              "event": "Traslado a recuperación"
+            }
           ]
         },
         {
           "id": "rda-1004",
           "attentionDate": "2025-04-18",
-          "type": "Apoyo diagnóstico",
+          "type": "RDA_PACIENTE",
           "entity": "Diagnóstico Avanzado IPS",
           "mainDiagnosis": "Seguimiento postoperatorio",
           "mainProcedure": "Ecografía abdominal",
           "serviceProfessional": "Radiología - Dra. Lina Muñoz",
           "clinicalSummary": "Control imagenológico posterior a procedimiento quirúrgico; hallazgos dentro de parámetros esperados.",
-          "diagnoses": ["Z09"],
-          "procedures": ["Ecografía abdominal total"],
+          "diagnoses": [
+            "Z09"
+          ],
+          "procedures": [
+            "Ecografía abdominal total"
+          ],
           "medications": [],
-          "observations": ["Sin colecciones", "Sin signos de infección"],
+          "observations": [
+            "Sin colecciones",
+            "Sin signos de infección"
+          ],
           "documents": [
-            { "name": "Informe imagenológico", "reference": "IMG-20250418-09" }
+            {
+              "name": "Informe imagenológico",
+              "reference": "IMG-20250418-09"
+            }
           ],
           "timeline": [
-            { "time": "09:00", "event": "Recepción de orden" },
-            { "time": "09:45", "event": "Toma de ecografía" },
-            { "time": "10:30", "event": "Entrega de informe" }
+            {
+              "time": "09:00",
+              "event": "Recepción de orden"
+            },
+            {
+              "time": "09:45",
+              "event": "Toma de ecografía"
+            },
+            {
+              "time": "10:30",
+              "event": "Entrega de informe"
+            }
           ]
         }
       ]
