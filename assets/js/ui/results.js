@@ -13,7 +13,7 @@ export function renderResults(container, rdas, onSelect) {
       (rda) => `
       <tr>
         <td>${escapeHtml(rda.attentionDate)}</td>
-        <td>${escapeHtml(rda.type)}</td>
+        <td>${escapeHtml(rda.typeLabel || rda.type)}</td>
         <td>${escapeHtml(rda.entity)}</td>
         <td>${escapeHtml(rda.serviceProfessional)}</td>
         <td>${escapeHtml(rda.mainDiagnosis)}</td>
