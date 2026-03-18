@@ -9,35 +9,47 @@ function escapeHtml(value) {
     .replaceAll("'", '&#39;');
 }
 
-function renderFieldValue(field) {
+function stringifyFieldValue(field) {
   if (!Array.isArray(field.value)) {
-    return escapeHtml(field.value || 'No registrado.');
+    return String(field.value || 'No registrado.');
   }
+  if (!field.value.length) return 'No registrado.';
 
-  if (!field.value.length) {
-    return '<li class="text-muted">No registrado.</li>';
+  if (field.key === 'diagnoses' || field.key === 'procedures') {
+    return field.value.map((item) => `${item.code} - ${item.description}`).join('\n');
   }
+  if (field.key === 'medications') {
+    return field.value.map((item) => `${item.name} (${item.dosage || 'N/A'})`).join('\n');
+  }
+  if (field.key === 'observations') {
+    return field.value.map((item) => item.note).join('\n');
+  }
+  if (field.key === 'documents') {
+    return field.value.map((item) => `${item.name} - ${item.reference}`).join('\n');
+  }
+  if (field.key === 'timeline') {
+    return field.value.map((item) => `${item.time} - ${item.event}`).join('\n');
+  }
+  return field.value.map((item) => JSON.stringify(item)).join('\n');
+}
 
-  return field.value
-    .map((item) => {
-      if (field.key === 'diagnoses' || field.key === 'procedures') {
-        return `<li>${escapeHtml(item.code)} - ${escapeHtml(item.description)}</li>`;
-      }
-      if (field.key === 'medications') {
-        return `<li>${escapeHtml(item.name)} (${escapeHtml(item.dosage || 'N/A')})</li>`;
-      }
-      if (field.key === 'observations') {
-        return `<li>${escapeHtml(item.note)}</li>`;
-      }
-      if (field.key === 'documents') {
-        return `<li>${escapeHtml(item.name)} - ${escapeHtml(item.reference)}</li>`;
-      }
-      if (field.key === 'timeline') {
-        return `<li>${escapeHtml(item.time)} - ${escapeHtml(item.event)}</li>`;
-      }
-      return `<li>${escapeHtml(JSON.stringify(item))}</li>`;
+function renderActiveTab(container, groups, tabIndex) {
+  const activeGroup = groups[tabIndex] || groups[0];
+  const fieldsHtml = activeGroup.fields
+    .map((field) => {
+      const value = stringifyFieldValue(field);
+      return `
+        <div class="field-item">
+          <label>${escapeHtml(RDA_FIELD_LABELS[field.key] || field.key)}</label>
+          <pre class="value-box">${escapeHtml(value)}</pre>
+        </div>
+      `;
     })
     .join('');
+
+  container.innerHTML = `
+    <div class="tab-content-grid">${fieldsHtml}</div>
+  `;
 }
 
 export function showDetailModal() {
@@ -54,19 +66,29 @@ export function renderDetail(container, rda) {
     return;
   }
 
-  const groups = (rda.groups || []).map((group) => `
-    <section class="detail-group">
-      <h4>${escapeHtml(group.title)}</h4>
-      ${group.fields
-        .map((field) => `
-        <div><strong>${escapeHtml(RDA_FIELD_LABELS[field.key] || field.key)}</strong><ul>${renderFieldValue(field)}</ul></div>
-      `)
-        .join('')}
-    </section>
-  `);
-
+  const groups = rda.groups || [];
   container.innerHTML = `
     <h3>${escapeHtml(rda.typeLabel || rda.type)} - ${escapeHtml(rda.recordCode)}</h3>
-    ${groups.join('')}
+    <div class="tabs-bar">
+      ${groups
+        .map(
+          (group, index) =>
+            `<button type="button" class="tab-btn ${index === 0 ? 'active' : ''}" data-tab-index="${index}">${escapeHtml(group.title)}</button>`
+        )
+        .join('')}
+    </div>
+    <section id="tab-content-area"></section>
   `;
+
+  const contentArea = container.querySelector('#tab-content-area');
+  renderActiveTab(contentArea, groups, 0);
+
+  container.querySelectorAll('.tab-btn').forEach((button) => {
+    button.addEventListener('click', () => {
+      const index = Number(button.dataset.tabIndex || 0);
+      container.querySelectorAll('.tab-btn').forEach((tab) => tab.classList.remove('active'));
+      button.classList.add('active');
+      renderActiveTab(contentArea, groups, index);
+    });
+  });
 }

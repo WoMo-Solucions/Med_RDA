@@ -1,8 +1,6 @@
 const crypto = require('crypto');
 
-const DEFAULT_USER = process.env.APP_USER || 'admin';
-const DEFAULT_PASS = process.env.APP_PASS || 'admin123';
-const SESSION_TTL_MS = Number(process.env.SESSION_TTL_MS || 1000 * 60 * 60 * 8);
+const SESSION_TTL_MS = Number(process.env.SESSION_TTL_MS);
 const sessions = new Map();
 
 function buildCookieOptions() {
@@ -34,7 +32,7 @@ function createSession(username) {
 }
 
 function validateCredentials(username, password) {
-  return username === DEFAULT_USER && password === DEFAULT_PASS;
+  return username === process.env.APP_USER && password === process.env.APP_PASS;
 }
 
 function getSessionFromRequest(req) {

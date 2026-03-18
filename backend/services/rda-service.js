@@ -1,7 +1,16 @@
 const { all, get } = require('../db/database');
 const { DETAIL_GROUPS_BY_TYPE, RDA_TYPE_LABELS, normalizeRdaType } = require('./rda-schema');
 
-const MINISTERIO_ENABLED = String(process.env.MINISTERIO_ENABLED || '').toLowerCase() === 'true';
+const MUNICIPALITY_BY_ENTITY = {
+  'Clínica Santa Aurora': 'Bogotá',
+  'Hospital San Gabriel': 'Medellín',
+  'Centro Médico Horizonte': 'Cali',
+  'IPS Integrada Norte': 'Barranquilla',
+  'Diagnóstico Avanzado IPS': 'Bucaramanga',
+  'Fundación CardioVida': 'Cartagena',
+  'Unidad Materno Infantil Sol': 'Pereira',
+  'Hospital Universitario Central': 'Bogotá'
+};
 
 function normalizeDoc(value) {
   return String(value || '').trim().toUpperCase();
@@ -9,10 +18,12 @@ function normalizeDoc(value) {
 
 function mapRdaBase(row) {
   const normalizedType = normalizeRdaType(row.type || row.rda_type);
+  const entity = row.entity || '';
   return {
     ...row,
     type: normalizedType,
-    typeLabel: RDA_TYPE_LABELS[normalizedType]
+    typeLabel: RDA_TYPE_LABELS[normalizedType],
+    municipio: MUNICIPALITY_BY_ENTITY[entity] || 'No registrado'
   };
 }
 
@@ -38,10 +49,6 @@ async function listPatientRdas(db, patientId, filters = {}) {
   const conditions = ['r.patient_id = ?'];
   const params = [patientId];
 
-  if (filters.rdaType) {
-    conditions.push('r.rda_type LIKE ?');
-    params.push(`%${String(filters.rdaType || '').replace(/^RDA_/, '').toLowerCase()}%`);
-  }
   if (filters.fromDate) {
     conditions.push('r.attention_date >= ?');
     params.push(filters.fromDate);
@@ -64,7 +71,9 @@ async function listPatientRdas(db, patientId, filters = {}) {
     params
   );
 
-  return rows.map(mapRdaBase);
+  const mapped = rows.map(mapRdaBase);
+  if (!filters.rdaType) return mapped;
+  return mapped.filter((row) => row.type === filters.rdaType);
 }
 
 function buildDetailGroups(detail) {
@@ -153,7 +162,10 @@ function buildMinisterioRequest(payload) {
 }
 
 async function fetchPatientRdas(db, patient, filters = {}) {
-  if (!MINISTERIO_ENABLED) {
+  const provider = String(process.env.DATA_PROVIDER || 'local');
+  const ministerioEnabled = String(process.env.MINISTERIO_ENABLED || '') === 'true';
+
+  if (provider !== 'ministerio' || !ministerioEnabled) {
     return { provider: 'local', rdas: await listPatientRdas(db, patient.id, filters) };
   }
 

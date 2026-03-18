@@ -1,4 +1,3 @@
-import { MODES, getRuntimeMode } from './config.js';
 import { getState, resetFilters, updateFilters, updateState } from './state.js';
 import {
   checkSession,
@@ -6,19 +5,16 @@ import {
   getPatientContext,
   loadCompositionDocument,
   loadDocumentTypes,
-  loadFhirSummary,
   loadPatientRdas,
   login,
   logout
 } from './api.js';
-import { getPatientContext as getSapPatientContext } from './adapters/sap-adapter.js';
-import { getPatientContext as getStandaloneContext } from './adapters/standalone-adapter.js';
 import { renderFilters } from './ui/filters.js';
 import { closeDetailModal, renderDetail, showDetailModal } from './ui/detail.js';
 import { renderResults } from './ui/results.js';
 import {
   renderAuthForm,
-  renderIdentifyForm,
+  renderHeaderLogos,
   renderPatientHeader,
   renderPersistentSearch,
   setAuthVisibility,
@@ -28,12 +24,21 @@ import {
 } from './ui/layout.js';
 
 const authPanel = document.getElementById('auth-panel');
-const identifyPanel = document.getElementById('identify-panel');
+const logosHeader = document.getElementById('logos-header');
 const searchPanel = document.getElementById('search-panel');
 const patientHeader = document.getElementById('patient-header');
 const filtersPanel = document.getElementById('filters-panel');
 const resultsPanel = document.getElementById('results-panel');
 const detailPanel = document.getElementById('detail-panel');
+const detailModal = document.getElementById('detail-modal');
+
+document.getElementById('modal-close').addEventListener('click', closeDetailModal);
+detailModal.addEventListener('click', (event) => {
+  if (event.target.id === 'detail-modal') closeDetailModal();
+});
+document.addEventListener('keydown', (event) => {
+  if (event.key === 'Escape') closeDetailModal();
+});
 
 document.getElementById('modal-close').addEventListener('click', closeDetailModal);
 document.getElementById('detail-modal').addEventListener('click', (event) => {
@@ -42,6 +47,42 @@ document.getElementById('detail-modal').addEventListener('click', (event) => {
 
 function getRdaTypes(rdas) {
   return [...new Set((rdas || []).map((item) => item.type).filter(Boolean))];
+}
+
+function renderBaseViewer() {
+  const state = getState();
+  renderHeaderLogos(logosHeader);
+  renderPersistentSearch(
+    searchPanel,
+    state.documentTypes,
+    state.patient || { documentType: state.documentTypes[0]?.code || '', documentNumber: '' },
+    async (payload) => {
+      await loadPatientFlow(payload, false);
+    },
+    doLogout
+  );
+  renderPatientHeader(patientHeader, state.patient);
+  renderFilters(filtersPanel, getRdaTypes(state.allRdas), state.filters, {
+    onSearch: async (newFilters) => {
+      updateFilters(newFilters);
+      const current = getState().patient;
+      if (!current) return;
+      await loadPatientFlow(current, true);
+    },
+    onClear: async () => {
+      resetFilters();
+      updateFilters(clearFilters());
+      const current = getState().patient;
+      if (!current) return;
+      await loadPatientFlow(current, true);
+    }
+  });
+  renderResults(resultsPanel, state.allRdas, async (recordCode) => {
+    const detail = await loadCompositionDocument(recordCode);
+    updateState({ selectedRda: detail });
+    renderDetail(detailPanel, detail);
+    showDetailModal();
+  });
 }
 
 async function loadPatientFlow(context, applyCurrentFilters = false) {
@@ -55,66 +96,19 @@ async function loadPatientFlow(context, applyCurrentFilters = false) {
     }
 
     const { rdas } = await loadPatientRdas(patient, filters);
-    const { summary } = await loadFhirSummary(patient);
-
     updateState({ patient, allRdas: rdas, selectedRda: null });
-    setViewerVisibility(true);
+    renderBaseViewer();
     showIdentifyMessage('');
-
-    renderPersistentSearch(searchPanel, state.documentTypes, patient, async (payload) => {
-      const nextContext = getStandaloneContext(payload);
-      await loadPatientFlow(nextContext, false);
-    }, doLogout);
-
-    renderPatientHeader(patientHeader, patient, summary);
-    renderFilters(filtersPanel, getRdaTypes(rdas), getState().filters, {
-      onSearch: async (newFilters) => {
-        updateFilters(newFilters);
-        await loadPatientFlow(patient, true);
-      },
-      onClear: async () => {
-        resetFilters();
-        updateFilters(clearFilters());
-        await loadPatientFlow(patient, true);
-      }
-    });
-
-    renderResults(resultsPanel, rdas, async (recordCode) => {
-      const detail = await loadCompositionDocument(recordCode);
-      updateState({ selectedRda: detail });
-      renderDetail(detailPanel, detail);
-      showDetailModal();
-    });
-
-    renderDetail(detailPanel, null);
   } catch (error) {
-    closeDetailModal();
+    updateState({ allRdas: [], selectedRda: null });
+    renderBaseViewer();
     showIdentifyMessage(error.message || 'Error en la consulta.', true);
   }
 }
 
-function initStandalone() {
-  const state = getState();
-  renderIdentifyForm(identifyPanel, state.documentTypes, async (formValues) => {
-    const context = getStandaloneContext(formValues);
-    await loadPatientFlow(context, false);
-  });
-  setViewerVisibility(false);
-}
-
-async function initSap() {
-  const searchParams = new URLSearchParams(window.location.search);
-  const context = getSapPatientContext(searchParams);
-  if (!context) {
-    initStandalone();
-    showIdentifyMessage('Modo SAP sin contexto válido.', true);
-    return;
-  }
-  await loadPatientFlow(context, false);
-}
-
 async function doLogout() {
   await logout();
+  updateState({ patient: null, allRdas: [], selectedRda: null });
   setViewerVisibility(false);
   setAuthVisibility(false);
   closeDetailModal();
@@ -122,16 +116,10 @@ async function doLogout() {
 }
 
 async function bootViewer() {
-  const searchParams = new URLSearchParams(window.location.search);
-  const hasSapContext = Boolean(window.SAP_CONTEXT);
-  const mode = getRuntimeMode(searchParams, hasSapContext);
   const documentTypes = await loadDocumentTypes();
-  updateState({ mode, documentTypes });
-  if (mode === MODES.SAP) {
-    await initSap();
-  } else {
-    initStandalone();
-  }
+  updateState({ documentTypes, patient: null, allRdas: [], selectedRda: null });
+  setViewerVisibility(true);
+  renderBaseViewer();
 }
 
 async function boot() {
@@ -152,6 +140,7 @@ async function boot() {
     await bootViewer();
   } catch (error) {
     setAuthVisibility(false);
+    setViewerVisibility(false);
   }
 }
 

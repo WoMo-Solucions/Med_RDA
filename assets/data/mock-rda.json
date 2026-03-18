@@ -58,7 +58,8 @@
               "time": "09:30",
               "event": "Alta con recomendaciones"
             }
-          ]
+          ],
+          "municipio": "Bogotá"
         },
         {
           "id": "rda-1002",
@@ -98,7 +99,8 @@
               "time": "14:30",
               "event": "Evaluación clínica"
             }
-          ]
+          ],
+          "municipio": "Cali"
         },
         {
           "id": "rda-1003",
@@ -147,7 +149,8 @@
               "time": "17:10",
               "event": "Traslado a recuperación"
             }
-          ]
+          ],
+          "municipio": "Medellín"
         },
         {
           "id": "rda-1004",
@@ -188,7 +191,8 @@
               "time": "10:30",
               "event": "Entrega de informe"
             }
-          ]
+          ],
+          "municipio": "Bucaramanga"
         }
       ]
     },
