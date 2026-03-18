@@ -40,6 +40,11 @@ document.addEventListener('keydown', (event) => {
   if (event.key === 'Escape') closeDetailModal();
 });
 
+document.getElementById('modal-close').addEventListener('click', closeDetailModal);
+document.getElementById('detail-modal').addEventListener('click', (event) => {
+  if (event.target.id === 'detail-modal') closeDetailModal();
+});
+
 function getRdaTypes(rdas) {
   return [...new Set((rdas || []).map((item) => item.type).filter(Boolean))];
 }
