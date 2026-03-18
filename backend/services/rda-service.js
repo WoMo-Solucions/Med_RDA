@@ -1,7 +1,30 @@
 const { all, get } = require('../db/database');
+const { DETAIL_GROUPS_BY_TYPE, RDA_TYPE_LABELS, normalizeRdaType } = require('./rda-schema');
+
+const MUNICIPALITY_BY_ENTITY = {
+  'Clínica Santa Aurora': 'Bogotá',
+  'Hospital San Gabriel': 'Medellín',
+  'Centro Médico Horizonte': 'Cali',
+  'IPS Integrada Norte': 'Barranquilla',
+  'Diagnóstico Avanzado IPS': 'Bucaramanga',
+  'Fundación CardioVida': 'Cartagena',
+  'Unidad Materno Infantil Sol': 'Pereira',
+  'Hospital Universitario Central': 'Bogotá'
+};
 
 function normalizeDoc(value) {
   return String(value || '').trim().toUpperCase();
+}
+
+function mapRdaBase(row) {
+  const normalizedType = normalizeRdaType(row.type || row.rda_type);
+  const entity = row.entity || '';
+  return {
+    ...row,
+    type: normalizedType,
+    typeLabel: RDA_TYPE_LABELS[normalizedType],
+    municipio: MUNICIPALITY_BY_ENTITY[entity] || 'No registrado'
+  };
 }
 
 async function queryPatient(db, { documentType, documentNumber }) {
@@ -26,10 +49,6 @@ async function listPatientRdas(db, patientId, filters = {}) {
   const conditions = ['r.patient_id = ?'];
   const params = [patientId];
 
-  if (filters.rdaType) {
-    conditions.push('r.rda_type = ?');
-    params.push(filters.rdaType);
-  }
   if (filters.fromDate) {
     conditions.push('r.attention_date >= ?');
     params.push(filters.fromDate);
@@ -39,7 +58,7 @@ async function listPatientRdas(db, patientId, filters = {}) {
     params.push(filters.toDate);
   }
 
-  return all(
+  const rows = await all(
     db,
     `SELECT r.id, r.record_code AS recordCode, r.attention_date AS attentionDate, r.rda_type AS type,
             i.name AS entity, r.service_professional AS serviceProfessional,
@@ -51,6 +70,18 @@ async function listPatientRdas(db, patientId, filters = {}) {
      ORDER BY r.attention_date DESC`,
     params
   );
+
+  const mapped = rows.map(mapRdaBase);
+  if (!filters.rdaType) return mapped;
+  return mapped.filter((row) => row.type === filters.rdaType);
+}
+
+function buildDetailGroups(detail) {
+  const groups = DETAIL_GROUPS_BY_TYPE[detail.type] || DETAIL_GROUPS_BY_TYPE.RDA_PACIENTE;
+  return groups.map((group) => ({
+    title: group.title,
+    fields: group.fields.map((field) => ({ key: field, value: detail[field] }))
+  }));
 }
 
 async function getRdaDetail(db, recordCode) {
@@ -78,7 +109,7 @@ async function getRdaDetail(db, recordCode) {
     get(db, 'SELECT profile, status, notes FROM composition_documents WHERE record_id = ?', [base.id])
   ]);
 
-  return {
+  const detail = mapRdaBase({
     ...base,
     diagnoses,
     procedures,
@@ -87,6 +118,11 @@ async function getRdaDetail(db, recordCode) {
     documents,
     timeline,
     composition: composition || null
+  });
+
+  return {
+    ...detail,
+    groups: buildDetailGroups(detail)
   };
 }
 
@@ -106,4 +142,49 @@ async function getDocument(db, reference) {
   return get(db, 'SELECT name, reference, content FROM attachments WHERE reference = ?', [reference]);
 }
 
-module.exports = { queryPatient, listPatientRdas, getRdaDetail, getSummary, getDocument };
+function buildMinisterioRequest(payload) {
+  return {
+    endpoint: '/v1/rda/patient/history',
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${process.env.MINISTERIO_TOKEN || 'mock-token'}`,
+      'Content-Type': 'application/json',
+      'X-Source-System': 'med-rda'
+    },
+    body: {
+      tipoDocumento: payload.documentType,
+      numeroDocumento: payload.documentNumber,
+      fechaDesde: payload.fromDate || null,
+      fechaHasta: payload.toDate || null,
+      tipoRda: payload.rdaType || null
+    }
+  };
+}
+
+async function fetchPatientRdas(db, patient, filters = {}) {
+  const provider = String(process.env.DATA_PROVIDER || 'local');
+  const ministerioEnabled = String(process.env.MINISTERIO_ENABLED || '') === 'true';
+
+  if (provider !== 'ministerio' || !ministerioEnabled) {
+    return { provider: 'local', rdas: await listPatientRdas(db, patient.id, filters) };
+  }
+
+  const request = buildMinisterioRequest({ ...patient, ...filters });
+
+  try {
+    if (String(process.env.MINISTERIO_FORCE_FAIL || '').toLowerCase() === 'true') {
+      throw new Error('Servicio ministerio no disponible.');
+    }
+    const localAsMappedResponse = await listPatientRdas(db, patient.id, filters);
+    return { provider: 'ministerio', request, rdas: localAsMappedResponse };
+  } catch (error) {
+    return {
+      provider: 'local',
+      fallbackReason: error.message,
+      request,
+      rdas: await listPatientRdas(db, patient.id, filters)
+    };
+  }
+}
+
+module.exports = { queryPatient, listPatientRdas, fetchPatientRdas, getRdaDetail, getSummary, getDocument, buildMinisterioRequest };

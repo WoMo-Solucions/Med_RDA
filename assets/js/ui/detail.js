@@ -1,3 +1,5 @@
+import { RDA_FIELD_LABELS } from '../rda-schema.js';
+
 function escapeHtml(value) {
   return String(value ?? '')
     .replaceAll('&', '&amp;')
@@ -7,9 +9,55 @@ function escapeHtml(value) {
     .replaceAll("'", '&#39;');
 }
 
-function listOrEmpty(items, renderer) {
-  if (!items?.length) return '<li class="text-muted">No registrado.</li>';
-  return items.map(renderer).join('');
+function stringifyFieldValue(field) {
+  if (!Array.isArray(field.value)) {
+    return String(field.value || 'No registrado.');
+  }
+  if (!field.value.length) return 'No registrado.';
+
+  if (field.key === 'diagnoses' || field.key === 'procedures') {
+    return field.value.map((item) => `${item.code} - ${item.description}`).join('\n');
+  }
+  if (field.key === 'medications') {
+    return field.value.map((item) => `${item.name} (${item.dosage || 'N/A'})`).join('\n');
+  }
+  if (field.key === 'observations') {
+    return field.value.map((item) => item.note).join('\n');
+  }
+  if (field.key === 'documents') {
+    return field.value.map((item) => `${item.name} - ${item.reference}`).join('\n');
+  }
+  if (field.key === 'timeline') {
+    return field.value.map((item) => `${item.time} - ${item.event}`).join('\n');
+  }
+  return field.value.map((item) => JSON.stringify(item)).join('\n');
+}
+
+function renderActiveTab(container, groups, tabIndex) {
+  const activeGroup = groups[tabIndex] || groups[0];
+  const fieldsHtml = activeGroup.fields
+    .map((field) => {
+      const value = stringifyFieldValue(field);
+      return `
+        <div class="field-item">
+          <label>${escapeHtml(RDA_FIELD_LABELS[field.key] || field.key)}</label>
+          <pre class="value-box">${escapeHtml(value)}</pre>
+        </div>
+      `;
+    })
+    .join('');
+
+  container.innerHTML = `
+    <div class="tab-content-grid">${fieldsHtml}</div>
+  `;
+}
+
+export function showDetailModal() {
+  document.getElementById('detail-modal').classList.remove('hidden');
+}
+
+export function closeDetailModal() {
+  document.getElementById('detail-modal').classList.add('hidden');
 }
 
 export function renderDetail(container, rda) {
@@ -18,19 +66,29 @@ export function renderDetail(container, rda) {
     return;
   }
 
+  const groups = rda.groups || [];
   container.innerHTML = `
-    <h3>Detalle RDA - ${escapeHtml(rda.recordCode)}</h3>
-    <p><strong>Resumen:</strong> ${escapeHtml(rda.clinicalSummary || 'Sin resumen clínico.')}</p>
-    <div class="detail-list">
-      <div><strong>Entidad:</strong> ${escapeHtml(rda.entity || 'N/A')}</div>
-      <div><strong>Fecha:</strong> ${escapeHtml(rda.attentionDate || 'N/A')}</div>
-      <div><strong>Servicio/Profesional:</strong> ${escapeHtml(rda.serviceProfessional || 'N/A')}</div>
-      <div><strong>Diagnósticos</strong><ul>${listOrEmpty(rda.diagnoses, (d) => `<li>${escapeHtml(d.code)} - ${escapeHtml(d.description)}</li>`)}</ul></div>
-      <div><strong>Procedimientos</strong><ul>${listOrEmpty(rda.procedures, (p) => `<li>${escapeHtml(p.code)} - ${escapeHtml(p.description)}</li>`)}</ul></div>
-      <div><strong>Medicamentos</strong><ul>${listOrEmpty(rda.medications, (m) => `<li>${escapeHtml(m.name)} (${escapeHtml(m.dosage || 'N/A')})</li>`)}</ul></div>
-      <div><strong>Observaciones</strong><ul>${listOrEmpty(rda.observations, (o) => `<li>${escapeHtml(o.note)}</li>`)}</ul></div>
-      <div><strong>Anexos</strong><ul>${listOrEmpty(rda.documents, (d) => `<li>${escapeHtml(d.name)} - ${escapeHtml(d.reference)}</li>`)}</ul></div>
-      <div><strong>Línea de tiempo</strong><ul>${listOrEmpty(rda.timeline, (t) => `<li>${escapeHtml(t.time)} - ${escapeHtml(t.event)}</li>`)}</ul></div>
+    <h3>${escapeHtml(rda.typeLabel || rda.type)} - ${escapeHtml(rda.recordCode)}</h3>
+    <div class="tabs-bar">
+      ${groups
+        .map(
+          (group, index) =>
+            `<button type="button" class="tab-btn ${index === 0 ? 'active' : ''}" data-tab-index="${index}">${escapeHtml(group.title)}</button>`
+        )
+        .join('')}
     </div>
+    <section id="tab-content-area"></section>
   `;
+
+  const contentArea = container.querySelector('#tab-content-area');
+  renderActiveTab(contentArea, groups, 0);
+
+  container.querySelectorAll('.tab-btn').forEach((button) => {
+    button.addEventListener('click', () => {
+      const index = Number(button.dataset.tabIndex || 0);
+      container.querySelectorAll('.tab-btn').forEach((tab) => tab.classList.remove('active'));
+      button.classList.add('active');
+      renderActiveTab(contentArea, groups, index);
+    });
+  });
 }
