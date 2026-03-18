@@ -1,7 +1,11 @@
 const path = require('path');
 const express = require('express');
+const { loadEnv } = require('./config/env');
 const { openDb } = require('./db/database');
 const { ensureSeeded } = require('./seeds/seed');
+
+loadEnv();
+
 const { createApiRouter } = require('./routes/api-routes');
 
 const PORT = Number(process.env.PORT || 8086);
@@ -15,6 +19,9 @@ app.use('/api', createApiRouter(db));
 app.use('/assets', express.static(path.resolve(__dirname, '../assets')));
 app.get(['/index.html', '/'], (req, res) => {
   res.sendFile(path.resolve(__dirname, '../index.html'));
+});
+app.get('/detail.html', (req, res) => {
+  res.sendFile(path.resolve(__dirname, '../detail.html'));
 });
 
 app.use((req, res) => {

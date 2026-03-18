@@ -8,15 +8,22 @@
   </head>
   <body>
     <main class="app-shell" id="app-shell">
-      <section class="panel identify-panel" id="identify-panel" aria-live="polite"></section>
+      <section class="panel identify-panel" id="auth-panel" aria-live="polite"></section>
       <section class="panel viewer-panel hidden" id="viewer-panel">
+        <header id="logos-header" class="logos-header"></header>
         <section id="search-panel" class="filters-panel"></section>
-        <header id="patient-header" class="patient-header"></header>
+        <header id="patient-header" class="patient-header hidden"></header>
         <section id="filters-panel" class="filters-panel"></section>
         <article class="panel-inner" id="results-panel"></article>
-        <article class="panel-inner" id="detail-panel"></article>
       </section>
     </main>
+
+    <div id="detail-modal" class="modal hidden" role="dialog" aria-modal="true" aria-label="Detalle RDA">
+      <div class="modal-content">
+        <button id="modal-close" type="button" class="modal-x" aria-label="Cerrar">×</button>
+        <article id="detail-panel"></article>
+      </div>
+    </div>
     <script type="module" src="./assets/js/app.js"></script>
   </body>
 </html>
