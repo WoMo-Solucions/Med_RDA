@@ -1,11 +1,19 @@
 const express = require('express');
 const {
   queryPatient,
-  listPatientRdas,
+  fetchPatientRdas,
   getRdaDetail,
   getSummary,
   getDocument
 } = require('../services/rda-service');
+const {
+  buildCookieOptions,
+  createSession,
+  destroySessionFromRequest,
+  getSessionFromRequest,
+  requireSession,
+  validateCredentials
+} = require('../services/auth-service');
 
 function validateDocumentInput(payload) {
   const documentType = String(payload?.documentType || '').trim().toUpperCase();
@@ -20,6 +28,31 @@ function validateDocumentInput(payload) {
 
 function createApiRouter(db) {
   const router = express.Router();
+
+  router.post('/auth/login', (req, res) => {
+    const username = String(req.body?.username || '').trim();
+    const password = String(req.body?.password || '');
+    if (!validateCredentials(username, password)) {
+      return res.status(401).json({ success: false, error: 'Usuario o contraseña inválidos.' });
+    }
+    const token = createSession(username);
+    res.cookie('med_rda_session', token, buildCookieOptions());
+    return res.json({ success: true, data: { username } });
+  });
+
+  router.get('/auth/session', (req, res) => {
+    const session = getSessionFromRequest(req);
+    if (!session) return res.status(401).json({ success: false, error: 'Sesión no válida.' });
+    return res.json({ success: true, data: { username: session.username } });
+  });
+
+  router.post('/auth/logout', (req, res) => {
+    destroySessionFromRequest(req);
+    res.clearCookie('med_rda_session', { path: '/' });
+    return res.json({ success: true, data: { loggedOut: true } });
+  });
+
+  router.use(requireSession);
 
   router.get('/document-types', async (req, res, next) => {
     try {
@@ -56,13 +89,13 @@ function createApiRouter(db) {
       const patient = await queryPatient(db, validated);
       if (!patient) return res.status(404).json({ success: false, error: 'Paciente no encontrado.' });
 
-      const rdas = await listPatientRdas(db, patient.id, {
+      const result = await fetchPatientRdas(db, patient, {
         rdaType: req.body?.rdaType || '',
         fromDate: req.body?.fromDate || '',
         toDate: req.body?.toDate || ''
       });
 
-      return res.json({ success: true, data: { patient, rdas } });
+      return res.json({ success: true, data: { patient: result.patient || patient, rdas: result.rdas, source: result.provider, fallbackReason: result.fallbackReason || null } });
     } catch (error) {
       next(error);
     }
