@@ -44,7 +44,7 @@ export function showAuthMessage(message, isError = false) {
   node.classList.toggle('alert', isError);
 }
 
-export function renderPersistentSearch(container, documentTypes, currentContext, detailOpenMode, onSubmit, onModeChange, onLogout) {
+export function renderPersistentSearch(container, documentTypes, currentContext, onSubmit, onLogout) {
   const options = documentTypes
     .map(
       (item) =>
@@ -62,19 +62,12 @@ export function renderPersistentSearch(container, documentTypes, currentContext,
       <label>Número de documento
         <input name="documentNumber" type="text" value="${escapeHtml(currentContext.documentNumber || '')}" required />
       </label>
-      <label>Detalle
-        <select name="detailOpenMode">
-          <option value="modal" ${detailOpenMode === 'modal' ? 'selected' : ''}>Popup</option>
-          <option value="page" ${detailOpenMode === 'page' ? 'selected' : ''}>Página</option>
-        </select>
-      </label>
       <button type="submit">Consultar</button>
       <button type="button" class="secondary" id="logout-btn">Cerrar sesión</button>
     </form>
   `;
 
   const form = container.querySelector('#persistent-search');
-  form.elements.detailOpenMode.addEventListener('change', () => onModeChange(form.elements.detailOpenMode.value));
   form.addEventListener('submit', (event) => {
     event.preventDefault();
     const payload = {
@@ -124,7 +117,7 @@ export function renderPatientHeader(container, patient) {
     <div class="patient-inline">
       <span>${escapeHtml(patient.documentType)} ${escapeHtml(patient.documentNumber)}</span>
       <span>${escapeHtml(patient.sex || 'N/A')}</span>
-      <span>${escapeHtml(patient.age || 'N/A')}</span>
+      <span>${escapeHtml(patient.ageLabel || 'N/A')}</span>
       <span>${escapeHtml(patient.birthDate || 'N/A')}</span>
       <span>${escapeHtml(patient.insurer || 'N/A')}</span>
     </div>

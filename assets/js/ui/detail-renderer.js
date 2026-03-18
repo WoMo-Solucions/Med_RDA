@@ -76,25 +76,3 @@ export function renderDetailTabs(container, rda) {
     });
   });
 }
-
-export function renderDetailBlocks(container, rda) {
-  const groups = rda.groups || [];
-  container.innerHTML = `
-    <div class="detail-page-title-wrap">
-      <h1>${escapeHtml(rda.typeLabel || rda.type)}</h1>
-      <p class="text-muted">Registro ${escapeHtml(rda.recordCode)}</p>
-    </div>
-    <div class="detail-page-groups">
-      ${groups
-        .map(
-          (group) => `
-            <section class="detail-block">
-              <h3>${escapeHtml(group.title)}</h3>
-              <div class="tab-content-grid">${group.fields.map(renderField).join('')}</div>
-            </section>
-          `
-        )
-        .join('')}
-    </div>
-  `;
-}

@@ -1,11 +1,11 @@
 import { renderDetailTabs } from './detail-renderer.js';
 
-export function showDetailModal() {
-  document.getElementById('detail-modal').classList.remove('hidden');
+export function showDetailDrawer() {
+  document.getElementById('detail-drawer').classList.add('open');
 }
 
-export function closeDetailModal() {
-  document.getElementById('detail-modal').classList.add('hidden');
+export function closeDetailDrawer() {
+  document.getElementById('detail-drawer').classList.remove('open');
 }
 
 export function renderDetail(container, rda) {

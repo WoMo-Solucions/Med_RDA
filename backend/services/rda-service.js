@@ -18,6 +18,29 @@ function normalizeDoc(value) {
   return String(value || '').trim().toUpperCase();
 }
 
+function formatAgeLabel(birthDate) {
+  if (!birthDate) return 'N/A';
+  const birth = new Date(birthDate);
+  if (Number.isNaN(birth.getTime())) return 'N/A';
+  const diffMs = Date.now() - birth.getTime();
+  if (diffMs < 0) return 'N/A';
+  const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
+  if (diffHours < 24) return `${diffHours} horas`;
+  const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+  if (diffDays < 31) return `${diffDays} días`;
+  const diffMonths = Math.floor(diffDays / 30.4375);
+  if (diffMonths < 24) return `${diffMonths} meses`;
+  const diffYears = Math.floor(diffDays / 365.25);
+  return `${diffYears} años`;
+}
+
+function createNormalizedPatient(patient) {
+  return {
+    ...patient,
+    ageLabel: formatAgeLabel(patient.birthDate)
+  };
+}
+
 function mapRdaBase(row) {
   const normalizedType = normalizeRdaType(row.type || row.rda_type);
   const entity = row.entity || '';
@@ -25,7 +48,9 @@ function mapRdaBase(row) {
     ...row,
     type: normalizedType,
     typeLabel: RDA_TYPE_LABELS[normalizedType],
-    municipio: row.municipio || MUNICIPALITY_BY_ENTITY[entity] || 'No registrado'
+    municipio: row.municipio || MUNICIPALITY_BY_ENTITY[entity] || 'No registrado',
+    sourceProvider: row.sourceProvider || 'local',
+    sourceFormat: row.sourceFormat || 'normalized-rda'
   };
 }
 
@@ -132,7 +157,7 @@ function buildDocumentReferenceMap(bundle) {
 function extractPatientFromBundle(bundle, fallbackPatient) {
   const patient = getBundleEntriesByType(bundle, 'Patient')[0];
   if (!patient) return fallbackPatient;
-  return {
+  return createNormalizedPatient({
     ...fallbackPatient,
     fullName: safeArray(patient.name)[0]?.text || [safeArray(patient.name)[0]?.given?.join(' '), safeArray(patient.name)[0]?.family].filter(Boolean).join(' ') || fallbackPatient.fullName,
     documentType: fallbackPatient.documentType,
@@ -140,7 +165,7 @@ function extractPatientFromBundle(bundle, fallbackPatient) {
     birthDate: patient.birthDate || fallbackPatient.birthDate,
     sex: patient.gender ? patient.gender.charAt(0).toUpperCase() + patient.gender.slice(1) : fallbackPatient.sex,
     insurer: fallbackPatient.insurer
-  };
+  });
 }
 
 function mapMinisterioBundleToRdas(bundle, fallbackPatient) {
@@ -273,7 +298,7 @@ async function queryPatient(db, { documentType, documentNumber }) {
   if (!patient) return null;
 
   const ageRow = await get(db, "SELECT CAST((julianday('now') - julianday(?))/365.25 AS INTEGER) AS age", [patient.birthDate]);
-  return { ...patient, age: ageRow?.age ?? null };
+  return createNormalizedPatient({ ...patient, age: ageRow?.age ?? null });
 }
 
 async function listPatientRdas(db, patientId, filters = {}) {
@@ -405,7 +430,7 @@ async function fetchPatientRdas(db, patient, filters = {}) {
   const ministerioEnabled = String(process.env.MINISTERIO_ENABLED || '') === 'true';
 
   if (provider !== 'ministerio' || !ministerioEnabled) {
-    return { provider: 'local', patient, rdas: await listPatientRdas(db, patient.id, filters) };
+    return { provider: 'local', patient: createNormalizedPatient(patient), rdas: await listPatientRdas(db, patient.id, filters) };
   }
 
   const request = buildMinisterioRequest({ ...patient, ...filters });
@@ -425,13 +450,13 @@ async function fetchPatientRdas(db, patient, filters = {}) {
     }
 
     const localAsMappedResponse = await listPatientRdas(db, patient.id, filters);
-    return { provider: 'ministerio', request, patient, rdas: localAsMappedResponse };
+    return { provider: 'ministerio', request, patient: createNormalizedPatient(patient), rdas: localAsMappedResponse };
   } catch (error) {
     return {
       provider: 'local',
       fallbackReason: error.message,
       request,
-      patient,
+      patient: createNormalizedPatient(patient),
       rdas: await listPatientRdas(db, patient.id, filters)
     };
   }

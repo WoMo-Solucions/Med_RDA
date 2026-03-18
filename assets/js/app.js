@@ -1,4 +1,4 @@
-import { getState, resetFilters, setDetailOpenMode, updateFilters, updateState } from './state.js';
+import { getState, resetFilters, updateFilters, updateState } from './state.js';
 import {
   checkSession,
   clearFilters,
@@ -10,7 +10,7 @@ import {
   logout
 } from './api.js';
 import { renderFilters } from './ui/filters.js';
-import { closeDetailModal, renderDetail, showDetailModal } from './ui/detail.js';
+import { closeDetailDrawer, renderDetail, showDetailDrawer } from './ui/detail.js';
 import { renderResults } from './ui/results.js';
 import {
   renderAuthForm,
@@ -30,22 +30,15 @@ const patientHeader = document.getElementById('patient-header');
 const filtersPanel = document.getElementById('filters-panel');
 const resultsPanel = document.getElementById('results-panel');
 const detailPanel = document.getElementById('detail-panel');
-const detailModal = document.getElementById('detail-modal');
+const detailDrawer = document.getElementById('detail-drawer');
 
-document.getElementById('modal-close').addEventListener('click', closeDetailModal);
-detailModal.addEventListener('click', (event) => {
-  if (event.target.id === 'detail-modal') closeDetailModal();
-});
+document.getElementById('detail-close').addEventListener('click', closeDetailDrawer);
 document.addEventListener('keydown', (event) => {
-  if (event.key === 'Escape') closeDetailModal();
+  if (event.key === 'Escape') closeDetailDrawer();
 });
 
 function getRdaTypes(rdas) {
   return [...new Set((rdas || []).map((item) => item.type).filter(Boolean))];
-}
-
-function openDetailInPage(recordCode) {
-  window.location.href = `/detail.html?recordCode=${encodeURIComponent(recordCode)}`;
 }
 
 function renderBaseViewer() {
@@ -55,13 +48,8 @@ function renderBaseViewer() {
     searchPanel,
     state.documentTypes,
     state.patient || { documentType: state.documentTypes[0]?.code || '', documentNumber: '' },
-    state.detailOpenMode,
     async (payload) => {
       await loadPatientFlow(payload, false);
-    },
-    (mode) => {
-      setDetailOpenMode(mode);
-      renderBaseViewer();
     },
     doLogout
   );
@@ -82,14 +70,10 @@ function renderBaseViewer() {
     }
   });
   renderResults(resultsPanel, state.allRdas, async (recordCode) => {
-    if (getState().detailOpenMode === 'page') {
-      openDetailInPage(recordCode);
-      return;
-    }
     const detail = await loadCompositionDocument(recordCode);
     updateState({ selectedRda: detail });
     renderDetail(detailPanel, detail);
-    showDetailModal();
+    showDetailDrawer();
   });
 }
 
@@ -103,12 +87,14 @@ async function loadPatientFlow(context, applyCurrentFilters = false) {
       updateFilters(filters);
     }
 
-    const { rdas } = await loadPatientRdas(patient, filters);
-    updateState({ patient, allRdas: rdas, selectedRda: null });
+    const { patient: normalizedPatient, rdas } = await loadPatientRdas(patient, filters);
+    updateState({ patient: normalizedPatient || patient, allRdas: rdas, selectedRda: null });
+    closeDetailDrawer();
     renderBaseViewer();
     showIdentifyMessage('');
   } catch (error) {
     updateState({ patient: applyCurrentFilters ? getState().patient : null, allRdas: [], selectedRda: null });
+    closeDetailDrawer();
     renderBaseViewer();
     showIdentifyMessage(error.message || 'Error en la consulta.', true);
   }
@@ -119,7 +105,7 @@ async function doLogout() {
   updateState({ patient: null, allRdas: [], selectedRda: null });
   setViewerVisibility(false);
   setAuthVisibility(false);
-  closeDetailModal();
+  closeDetailDrawer();
   showAuthMessage('Sesión cerrada correctamente.');
 }
 
@@ -127,6 +113,7 @@ async function bootViewer() {
   const documentTypes = await loadDocumentTypes();
   updateState({ documentTypes, patient: null, allRdas: [], selectedRda: null });
   setViewerVisibility(true);
+  closeDetailDrawer();
   renderBaseViewer();
 }
 
