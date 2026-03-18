@@ -20,6 +20,9 @@ app.use('/assets', express.static(path.resolve(__dirname, '../assets')));
 app.get(['/index.html', '/'], (req, res) => {
   res.sendFile(path.resolve(__dirname, '../index.html'));
 });
+app.get('/detail.html', (req, res) => {
+  res.sendFile(path.resolve(__dirname, '../detail.html'));
+});
 
 app.use((req, res) => {
   res.status(404).json({ success: false, error: 'Recurso no encontrado.' });
