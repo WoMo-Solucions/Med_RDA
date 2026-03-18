@@ -1,4 +1,4 @@
-import { getState, resetFilters, updateFilters, updateState } from './state.js';
+import { getState, resetFilters, setDetailOpenMode, updateFilters, updateState } from './state.js';
 import {
   checkSession,
   clearFilters,
@@ -40,13 +40,12 @@ document.addEventListener('keydown', (event) => {
   if (event.key === 'Escape') closeDetailModal();
 });
 
-document.getElementById('modal-close').addEventListener('click', closeDetailModal);
-document.getElementById('detail-modal').addEventListener('click', (event) => {
-  if (event.target.id === 'detail-modal') closeDetailModal();
-});
-
 function getRdaTypes(rdas) {
   return [...new Set((rdas || []).map((item) => item.type).filter(Boolean))];
+}
+
+function openDetailInPage(recordCode) {
+  window.location.href = `/detail.html?recordCode=${encodeURIComponent(recordCode)}`;
 }
 
 function renderBaseViewer() {
@@ -56,8 +55,13 @@ function renderBaseViewer() {
     searchPanel,
     state.documentTypes,
     state.patient || { documentType: state.documentTypes[0]?.code || '', documentNumber: '' },
+    state.detailOpenMode,
     async (payload) => {
       await loadPatientFlow(payload, false);
+    },
+    (mode) => {
+      setDetailOpenMode(mode);
+      renderBaseViewer();
     },
     doLogout
   );
@@ -78,6 +82,10 @@ function renderBaseViewer() {
     }
   });
   renderResults(resultsPanel, state.allRdas, async (recordCode) => {
+    if (getState().detailOpenMode === 'page') {
+      openDetailInPage(recordCode);
+      return;
+    }
     const detail = await loadCompositionDocument(recordCode);
     updateState({ selectedRda: detail });
     renderDetail(detailPanel, detail);
@@ -100,7 +108,7 @@ async function loadPatientFlow(context, applyCurrentFilters = false) {
     renderBaseViewer();
     showIdentifyMessage('');
   } catch (error) {
-    updateState({ allRdas: [], selectedRda: null });
+    updateState({ patient: applyCurrentFilters ? getState().patient : null, allRdas: [], selectedRda: null });
     renderBaseViewer();
     showIdentifyMessage(error.message || 'Error en la consulta.', true);
   }

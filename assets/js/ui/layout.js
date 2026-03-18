@@ -44,7 +44,7 @@ export function showAuthMessage(message, isError = false) {
   node.classList.toggle('alert', isError);
 }
 
-export function renderPersistentSearch(container, documentTypes, currentContext, onSubmit, onLogout) {
+export function renderPersistentSearch(container, documentTypes, currentContext, detailOpenMode, onSubmit, onModeChange, onLogout) {
   const options = documentTypes
     .map(
       (item) =>
@@ -62,12 +62,19 @@ export function renderPersistentSearch(container, documentTypes, currentContext,
       <label>Número de documento
         <input name="documentNumber" type="text" value="${escapeHtml(currentContext.documentNumber || '')}" required />
       </label>
+      <label>Detalle
+        <select name="detailOpenMode">
+          <option value="modal" ${detailOpenMode === 'modal' ? 'selected' : ''}>Popup</option>
+          <option value="page" ${detailOpenMode === 'page' ? 'selected' : ''}>Página</option>
+        </select>
+      </label>
       <button type="submit">Consultar</button>
       <button type="button" class="secondary" id="logout-btn">Cerrar sesión</button>
     </form>
   `;
 
   const form = container.querySelector('#persistent-search');
+  form.elements.detailOpenMode.addEventListener('change', () => onModeChange(form.elements.detailOpenMode.value));
   form.addEventListener('submit', (event) => {
     event.preventDefault();
     const payload = {
@@ -106,17 +113,16 @@ export function showIdentifyMessage(message, isError = false) {
 
 export function renderPatientHeader(container, patient) {
   if (!patient) {
-    container.innerHTML = `
-      <h2 class="patient-name">Paciente no seleccionado</h2>
-      <div class="patient-inline text-muted">Consulte un documento para cargar el resumen del paciente.</div>
-    `;
+    container.classList.add('hidden');
+    container.innerHTML = '';
     return;
   }
 
+  container.classList.remove('hidden');
   container.innerHTML = `
     <h2 class="patient-name">${escapeHtml(patient.fullName)}</h2>
     <div class="patient-inline">
-      ${escapeHtml(patient.documentType)} ${escapeHtml(patient.documentNumber)}
+      <span>${escapeHtml(patient.documentType)} ${escapeHtml(patient.documentNumber)}</span>
       <span>${escapeHtml(patient.sex || 'N/A')}</span>
       <span>${escapeHtml(patient.age || 'N/A')}</span>
       <span>${escapeHtml(patient.birthDate || 'N/A')}</span>

@@ -95,7 +95,7 @@ function createApiRouter(db) {
         toDate: req.body?.toDate || ''
       });
 
-      return res.json({ success: true, data: { patient, rdas: result.rdas, source: result.provider, fallbackReason: result.fallbackReason || null } });
+      return res.json({ success: true, data: { patient: result.patient || patient, rdas: result.rdas, source: result.provider, fallbackReason: result.fallbackReason || null } });
     } catch (error) {
       next(error);
     }

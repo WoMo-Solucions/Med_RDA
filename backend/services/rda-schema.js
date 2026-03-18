@@ -17,7 +17,8 @@ function normalizeRdaType(value) {
   if (!raw) return OFFICIAL_RDA_TYPES.PACIENTE;
   if (raw.includes('urg')) return OFFICIAL_RDA_TYPES.URGENCIAS;
   if (raw.includes('hosp')) return OFFICIAL_RDA_TYPES.HOSPITALIZACION;
-  if (raw.includes('consulta') || raw.includes('control') || raw.includes('apoyo') || raw.includes('ambulator')) {
+  if (raw.includes('paciente') || raw.includes('apoyo')) return OFFICIAL_RDA_TYPES.PACIENTE;
+  if (raw.includes('consulta') || raw.includes('control') || raw.includes('ambulator')) {
     return OFFICIAL_RDA_TYPES.CONSULTA_EXTERNA;
   }
   return OFFICIAL_RDA_TYPES.PACIENTE;
