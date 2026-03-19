@@ -44,7 +44,7 @@ export function showAuthMessage(message, isError = false) {
   node.classList.toggle('alert', isError);
 }
 
-export function renderPersistentSearch(container, documentTypes, currentContext, detailOpenMode, onSubmit, onModeChange, onLogout) {
+export function renderPersistentSearch(container, documentTypes, currentContext, detailOpenMode, onSubmit, onModeChange) {
   const options = documentTypes
     .map(
       (item) =>
@@ -55,26 +55,29 @@ export function renderPersistentSearch(container, documentTypes, currentContext,
     .join('');
 
   container.innerHTML = `
-    <form id="persistent-search" class="search-header-form">
-      <label>Tipo de documento
-        <select name="documentType" required>${options}</select>
-      </label>
-      <label>Número de documento
-        <input name="documentNumber" type="text" value="${escapeHtml(currentContext.documentNumber || '')}" required />
-      </label>
-      <label>Detalle
-        <select name="detailOpenMode">
-          <option value="modal" ${detailOpenMode === 'modal' ? 'selected' : ''}>Popup</option>
-          <option value="page" ${detailOpenMode === 'page' ? 'selected' : ''}>Página</option>
-        </select>
-      </label>
-      <button type="submit">Consultar</button>
-      <button type="button" class="secondary" id="logout-btn">Cerrar sesión</button>
-    </form>
+    <div class="search-toolbar-card">
+      <form id="persistent-search" class="search-header-form">
+        <label>Tipo de documento
+          <select name="documentType" required>${options}</select>
+        </label>
+        <label>Número de documento
+          <input name="documentNumber" type="text" value="${escapeHtml(currentContext.documentNumber || '')}" required />
+        </label>
+        <button type="submit">Consultar</button>
+      </form>
+      <div class="viewer-toolbar-actions">
+        <label class="detail-mode-control">
+          <input name="detailOpenMode" type="checkbox" ${detailOpenMode === 'page' ? 'checked' : ''} />
+          <span>Visualizar en pagina</span>
+        </label>
+      </div>
+    </div>
   `;
 
   const form = container.querySelector('#persistent-search');
-  form.elements.detailOpenMode.addEventListener('change', () => onModeChange(form.elements.detailOpenMode.value));
+  const detailMode = container.querySelector('input[name="detailOpenMode"]');
+
+  detailMode.addEventListener('change', () => onModeChange(detailMode.checked ? 'page' : 'modal'));
   form.addEventListener('submit', (event) => {
     event.preventDefault();
     const payload = {
@@ -83,7 +86,6 @@ export function renderPersistentSearch(container, documentTypes, currentContext,
     };
     onSubmit(payload);
   });
-  container.querySelector('#logout-btn').addEventListener('click', onLogout);
 }
 
 export function renderHeaderLogos(container) {
@@ -109,6 +111,7 @@ export function showIdentifyMessage(message, isError = false) {
   if (!node) return;
   node.textContent = message;
   node.classList.toggle('alert', isError);
+  node.classList.toggle('hidden', !message);
 }
 
 export function renderPatientHeader(container, patient) {
@@ -120,14 +123,29 @@ export function renderPatientHeader(container, patient) {
 
   container.classList.remove('hidden');
   container.innerHTML = `
-    <h2 class="patient-name">${escapeHtml(patient.fullName)}</h2>
-    <div class="patient-inline">
+    <div class="patient-summary-item patient-summary-primary">
+      <span class="patient-summary-label">Paciente</span>
+      <strong class="patient-name">${escapeHtml(patient.fullName)}</strong>
+    </div>
+    <div class="patient-summary-item">
+      <span class="patient-summary-label">Documento</span>
       <span>${escapeHtml(patient.documentType)} ${escapeHtml(patient.documentNumber)}</span>
+    </div>
+    <div class="patient-summary-item">
+      <span class="patient-summary-label">Género</span>
       <span>${escapeHtml(patient.sex || 'N/A')}</span>
+    </div>
+    <div class="patient-summary-item">
+      <span class="patient-summary-label">Edad</span>
       <span>${escapeHtml(patient.age || 'N/A')}</span>
+    </div>
+    <div class="patient-summary-item">
+      <span class="patient-summary-label">Fecha de nacimiento</span>
       <span>${escapeHtml(patient.birthDate || 'N/A')}</span>
+    </div>
+    <div class="patient-summary-item">
+      <span class="patient-summary-label">EPS</span>
       <span>${escapeHtml(patient.insurer || 'N/A')}</span>
     </div>
-    <p id="identify-message" class="text-muted"></p>
   `;
 }

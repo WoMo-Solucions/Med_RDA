@@ -1,4 +1,4 @@
-import { getState, resetFilters, setDetailOpenMode, updateFilters, updateState } from './state.js';
+import { getState, resetFilters, updateFilters, updateState } from './state.js';
 import {
   checkSession,
   clearFilters,
@@ -10,13 +10,12 @@ import {
   logout
 } from './api.js';
 import { renderFilters } from './ui/filters.js';
-import { closeDetailModal, renderDetail, showDetailModal } from './ui/detail.js';
+import { renderDetail } from './ui/detail.js';
 import { renderResults } from './ui/results.js';
 import {
   renderAuthForm,
   renderHeaderLogos,
   renderPatientHeader,
-  renderPersistentSearch,
   setAuthVisibility,
   setViewerVisibility,
   showAuthMessage,
@@ -25,90 +24,108 @@ import {
 
 const authPanel = document.getElementById('auth-panel');
 const logosHeader = document.getElementById('logos-header');
-const searchPanel = document.getElementById('search-panel');
 const patientHeader = document.getElementById('patient-header');
 const filtersPanel = document.getElementById('filters-panel');
 const resultsPanel = document.getElementById('results-panel');
 const detailPanel = document.getElementById('detail-panel');
-const detailModal = document.getElementById('detail-modal');
-
-document.getElementById('modal-close').addEventListener('click', closeDetailModal);
-detailModal.addEventListener('click', (event) => {
-  if (event.target.id === 'detail-modal') closeDetailModal();
-});
-document.addEventListener('keydown', (event) => {
-  if (event.key === 'Escape') closeDetailModal();
-});
 
 function getRdaTypes(rdas) {
   return [...new Set((rdas || []).map((item) => item.type).filter(Boolean))];
 }
 
-function openDetailInPage(recordCode) {
-  window.location.href = `/detail.html?recordCode=${encodeURIComponent(recordCode)}`;
+function getDefaultSearchContext() {
+  const state = getState();
+  return {
+    documentType: state.searchContext.documentType || state.documentTypes[0]?.code || '',
+    documentNumber: state.searchContext.documentNumber || ''
+  };
+}
+
+function getSelectedRdaIndex() {
+  const state = getState();
+  const code = state.selectedRda?.recordCode;
+  if (!code) return -1;
+  return state.allRdas.findIndex((item) => item.recordCode === code);
+}
+
+async function openSelectedDetail(recordCode) {
+  try {
+    const detail = await loadCompositionDocument(recordCode);
+    updateState({ selectedRda: detail });
+    renderBaseViewer();
+    showIdentifyMessage('');
+  } catch (error) {
+    showIdentifyMessage(error.message || 'No fue posible cargar el detalle.', true);
+  }
+}
+
+function closeInlineDetail() {
+  updateState({ selectedRda: null });
+  renderBaseViewer();
 }
 
 function renderBaseViewer() {
   const state = getState();
+  const selectedIndex = getSelectedRdaIndex();
+  const hasDetail = Boolean(state.selectedRda);
+
   renderHeaderLogos(logosHeader);
-  renderPersistentSearch(
-    searchPanel,
-    state.documentTypes,
-    state.patient || { documentType: state.documentTypes[0]?.code || '', documentNumber: '' },
-    state.detailOpenMode,
-    async (payload) => {
-      await loadPatientFlow(payload, false);
-    },
-    (mode) => {
-      setDetailOpenMode(mode);
-      renderBaseViewer();
-    },
-    doLogout
-  );
   renderPatientHeader(patientHeader, state.patient);
-  renderFilters(filtersPanel, getRdaTypes(state.allRdas), state.filters, {
-    onSearch: async (newFilters) => {
-      updateFilters(newFilters);
-      const current = getState().patient;
-      if (!current) return;
-      await loadPatientFlow(current, true);
+  renderFilters(filtersPanel, {
+    documentTypes: state.documentTypes,
+    currentContext: getDefaultSearchContext(),
+    rdaTypes: getRdaTypes(state.allRdas),
+    defaultFilters: state.filters,
+    onConsult: async ({ context, filters }) => {
+      await loadPatientFlow(context, filters);
     },
-    onClear: async () => {
-      resetFilters();
-      updateFilters(clearFilters());
-      const current = getState().patient;
-      if (!current) return;
-      await loadPatientFlow(current, true);
-    }
+    onLogout: doLogout
   });
-  renderResults(resultsPanel, state.allRdas, async (recordCode) => {
-    if (getState().detailOpenMode === 'page') {
-      openDetailInPage(recordCode);
-      return;
-    }
-    const detail = await loadCompositionDocument(recordCode);
-    updateState({ selectedRda: detail });
-    renderDetail(detailPanel, detail);
-    showDetailModal();
+
+  resultsPanel.classList.toggle('hidden', hasDetail);
+  detailPanel.classList.toggle('hidden', !hasDetail);
+
+  if (!hasDetail) {
+    renderResults(resultsPanel, state.allRdas, async (recordCode) => {
+      await openSelectedDetail(recordCode);
+    });
+    detailPanel.innerHTML = '';
+    return;
+  }
+
+  renderDetail(detailPanel, state.selectedRda, {
+    hasPrevious: selectedIndex > 0,
+    hasNext: selectedIndex > -1 && selectedIndex < state.allRdas.length - 1,
+    onPrevious: async () => {
+      if (selectedIndex > 0) {
+        await openSelectedDetail(state.allRdas[selectedIndex - 1].recordCode);
+      }
+    },
+    onNext: async () => {
+      if (selectedIndex > -1 && selectedIndex < state.allRdas.length - 1) {
+        await openSelectedDetail(state.allRdas[selectedIndex + 1].recordCode);
+      }
+    },
+    onClose: closeInlineDetail
   });
 }
 
-async function loadPatientFlow(context, applyCurrentFilters = false) {
-  try {
-    const patient = await getPatientContext(context);
-    const state = getState();
-    const filters = applyCurrentFilters ? state.filters : clearFilters();
-    if (!applyCurrentFilters) {
-      resetFilters();
-      updateFilters(filters);
-    }
+async function loadPatientFlow(context, nextFilters = clearFilters()) {
+  const normalizedContext = {
+    documentType: String(context.documentType || '').trim(),
+    documentNumber: String(context.documentNumber || '').trim()
+  };
 
-    const { rdas } = await loadPatientRdas(patient, filters);
+  try {
+    updateState({ searchContext: normalizedContext });
+    updateFilters(nextFilters);
+    const patient = await getPatientContext(normalizedContext);
+    const { rdas } = await loadPatientRdas(patient, nextFilters);
     updateState({ patient, allRdas: rdas, selectedRda: null });
     renderBaseViewer();
     showIdentifyMessage('');
   } catch (error) {
-    updateState({ patient: applyCurrentFilters ? getState().patient : null, allRdas: [], selectedRda: null });
+    updateState({ patient: null, allRdas: [], selectedRda: null, searchContext: normalizedContext });
     renderBaseViewer();
     showIdentifyMessage(error.message || 'Error en la consulta.', true);
   }
@@ -116,16 +133,22 @@ async function loadPatientFlow(context, applyCurrentFilters = false) {
 
 async function doLogout() {
   await logout();
-  updateState({ patient: null, allRdas: [], selectedRda: null });
+  updateState({ patient: null, allRdas: [], selectedRda: null, searchContext: { documentType: '', documentNumber: '' } });
+  resetFilters();
   setViewerVisibility(false);
   setAuthVisibility(false);
-  closeDetailModal();
   showAuthMessage('Sesión cerrada correctamente.');
 }
 
 async function bootViewer() {
   const documentTypes = await loadDocumentTypes();
-  updateState({ documentTypes, patient: null, allRdas: [], selectedRda: null });
+  updateState({
+    documentTypes,
+    patient: null,
+    allRdas: [],
+    selectedRda: null,
+    searchContext: { documentType: documentTypes[0]?.code || '', documentNumber: '' }
+  });
   setViewerVisibility(true);
   renderBaseViewer();
 }
