@@ -98,6 +98,10 @@ export function setAuthVisibility(isLoggedIn) {
   if (panel) panel.classList.toggle('hidden', isLoggedIn);
 }
 
+export function setAuthVisibility(isLoggedIn) {
+  document.getElementById('auth-panel').classList.toggle('hidden', isLoggedIn);
+}
+
 export function showIdentifyMessage(message, isError = false) {
   const node = document.getElementById('identify-message');
   if (!node) return;
