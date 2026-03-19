@@ -11,10 +11,15 @@
       <section class="panel identify-panel" id="auth-panel" aria-live="polite"></section>
       <section class="panel viewer-panel hidden" id="viewer-panel">
         <header id="logos-header" class="logos-header"></header>
-        <section id="search-panel" class="filters-panel"></section>
-        <header id="patient-header" class="patient-header hidden"></header>
-        <section id="filters-panel" class="filters-panel"></section>
-        <article class="panel-inner" id="results-panel"></article>
+        <section class="viewer-dashboard">
+          <aside id="filters-panel" class="viewer-sidebar"></aside>
+          <div class="viewer-content">
+            <section id="search-panel" class="search-panel"></section>
+            <p id="identify-message" class="text-muted hidden"></p>
+            <header id="patient-header" class="patient-header hidden"></header>
+            <article class="panel-inner" id="results-panel"></article>
+          </div>
+        </section>
       </section>
     </main>
 
