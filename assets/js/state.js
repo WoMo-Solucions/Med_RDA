@@ -4,6 +4,7 @@ const state = {
   documentTypes: [],
   allRdas: [],
   selectedRda: null,
+  detailView: 'popup',
   filters: {
     fromDate: '',
     toDate: '',
