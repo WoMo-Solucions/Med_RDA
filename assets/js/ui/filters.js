@@ -7,8 +7,20 @@ function escapeHtml(value) {
     .replaceAll("'", '&#39;');
 }
 
+const LABELS = {
+  RDA_PACIENTE: 'Paciente',
+  RDA_CONSULTA_EXTERNA: 'Consulta externa',
+  RDA_HOSPITALIZACION: 'Hospitalización',
+  RDA_URGENCIAS: 'Urgencias'
+};
+
 export function renderFilters(container, rdaTypes, defaultFilters, callbacks) {
-  const typeOptions = rdaTypes.map((type) => `<option value="${escapeHtml(type)}">${escapeHtml(type)}</option>`).join('');
+  const sortedTypes = ['RDA_PACIENTE', 'RDA_CONSULTA_EXTERNA', 'RDA_HOSPITALIZACION', 'RDA_URGENCIAS'].filter((t) =>
+    rdaTypes.includes(t)
+  );
+  const typeOptions = sortedTypes
+    .map((type) => `<option value="${escapeHtml(type)}">${escapeHtml(LABELS[type] || type)}</option>`)
+    .join('');
 
   container.innerHTML = `
     <h3>Filtros del paciente</h3>
