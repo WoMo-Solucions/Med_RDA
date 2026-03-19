@@ -23,20 +23,22 @@ export function renderFilters(container, rdaTypes, defaultFilters, callbacks) {
     .join('');
 
   container.innerHTML = `
-    <h3>Filtros del paciente</h3>
-    <form id="filters-form">
-      <div class="filters-grid">
+    <div class="sidebar-card">
+      <div class="sidebar-card-head">
+        <h3>Filtros</h3>
+        <p class="text-muted">Ajuste la consulta del historial del paciente.</p>
+      </div>
+      <form id="filters-form" class="sidebar-form">
         <label>Tipo RDA
           <select name="rdaType"><option value="">Todos</option>${typeOptions}</select>
         </label>
         <label>Fecha desde<input type="date" name="fromDate" value="${escapeHtml(defaultFilters.fromDate)}" /></label>
         <label>Fecha hasta<input type="date" name="toDate" value="${escapeHtml(defaultFilters.toDate)}" /></label>
-      </div>
-      <div class="filter-actions">
         <button type="submit">Aplicar filtros</button>
         <button type="button" class="secondary" id="clear-filters">Limpiar</button>
-      </div>
-    </form>
+        <button type="button" class="secondary danger-action" id="logout-btn">Cerrar sesión</button>
+      </form>
+    </div>
   `;
 
   const form = container.querySelector('#filters-form');
@@ -53,4 +55,5 @@ export function renderFilters(container, rdaTypes, defaultFilters, callbacks) {
   });
 
   container.querySelector('#clear-filters').addEventListener('click', callbacks.onClear);
+  container.querySelector('#logout-btn').addEventListener('click', callbacks.onLogout);
 }
