@@ -22,20 +22,25 @@ export function renderResults(container, rdas, onSelect) {
 
   container.innerHTML = `
     <div class="results-head">
-      <h3>Historial de atenciones en salud</h3>
+      <div>
+        <h3>Historial de atenciones en salud</h3>
+        <p class="text-muted">Seleccione un registro para ver el detalle clínico.</p>
+      </div>
       <span class="tag">${(rdas || []).length} registros</span>
     </div>
-    <table class="results-table">
-      <thead>
-        <tr>
-          <th>Fecha</th>
-          <th>Tipo RDA</th>
-          <th>Institucion</th>
-          <th>Municipio</th>
-        </tr>
-      </thead>
-      <tbody>${rows || '<tr><td colspan="4" class="text-muted">Sin resultados para el paciente.</td></tr>'}</tbody>
-    </table>
+    <div class="results-table-wrap">
+      <table class="results-table">
+        <thead>
+          <tr>
+            <th>Fecha</th>
+            <th>Tipo RDA</th>
+            <th>Institución</th>
+            <th>Municipio</th>
+          </tr>
+        </thead>
+        <tbody>${rows || '<tr><td colspan="4" class="text-muted results-empty">Sin resultados para el paciente</td></tr>'}</tbody>
+      </table>
+    </div>
   `;
 
   container.querySelectorAll('.history-row').forEach((row) => {

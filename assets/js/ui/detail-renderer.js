@@ -9,72 +9,76 @@ function escapeHtml(value) {
     .replaceAll("'", '&#39;');
 }
 
-function stringifyFieldValue(field) {
-  if (!Array.isArray(field.value)) {
-    return String(field.value || 'No registrado.');
-  }
-  if (!field.value.length) return 'No registrado.';
-
-  if (field.key === 'diagnoses' || field.key === 'procedures') {
-    return field.value.map((item) => `${item.code} - ${item.description}`).join('\n');
-  }
-  if (field.key === 'medications') {
-    return field.value.map((item) => `${item.name} (${item.dosage || 'N/A'})`).join('\n');
-  }
-  if (field.key === 'observations') {
-    return field.value.map((item) => item.note).join('\n');
-  }
-  if (field.key === 'documents') {
-    return field.value.map((item) => `${item.name} - ${item.reference}`).join('\n');
-  }
-  if (field.key === 'timeline') {
-    return field.value.map((item) => `${item.time} - ${item.event}`).join('\n');
-  }
-  return field.value.map((item) => JSON.stringify(item)).join('\n');
+function isMeaningful(value) {
+  if (Array.isArray(value)) return value.some(isMeaningful);
+  if (value && typeof value === 'object') return Object.values(value).some(isMeaningful);
+  return String(value ?? '').trim().length > 0;
 }
 
-function renderField(field) {
-  const value = stringifyFieldValue(field);
+function renderObjectRows(item) {
+  const entries = Object.entries(item || {}).filter(([, value]) => isMeaningful(value));
+  if (!entries.length) return '<p class="text-muted">No registrado.</p>';
+
+  return entries
+    .map(
+      ([key, value]) => `
+        <div class="collection-field-row">
+          <span class="collection-field-label">${escapeHtml(RDA_FIELD_LABELS[key] || key)}</span>
+          <span class="collection-field-value">${escapeHtml(String(value))}</span>
+        </div>
+      `
+    )
+    .join('');
+}
+
+function renderCollection(items) {
+  if (!items.length) return '<p class="text-muted">No registrado.</p>';
+
   return `
-    <div class="field-item">
-      <label>${escapeHtml(RDA_FIELD_LABELS[field.key] || field.key)}</label>
-      <pre class="value-box">${escapeHtml(value)}</pre>
-    </div>
-  `;
-}
-
-function renderActiveTab(container, groups, tabIndex) {
-  const activeGroup = groups[tabIndex] || groups[0];
-  const fieldsHtml = activeGroup.fields.map(renderField).join('');
-  container.innerHTML = `<div class="tab-content-grid">${fieldsHtml}</div>`;
-}
-
-export function renderDetailTabs(container, rda) {
-  const groups = rda.groups || [];
-  container.innerHTML = `
-    <h3>${escapeHtml(rda.typeLabel || rda.type)} - ${escapeHtml(rda.recordCode)}</h3>
-    <div class="tabs-bar">
-      ${groups
+    <div class="collection-list">
+      ${items
         .map(
-          (group, index) =>
-            `<button type="button" class="tab-btn ${index === 0 ? 'active' : ''}" data-tab-index="${index}">${escapeHtml(group.title)}</button>`
+          (item) => `
+            <article class="collection-item">
+              ${renderObjectRows(item)}
+            </article>
+          `
         )
         .join('')}
     </div>
-    <section id="tab-content-area"></section>
   `;
+}
 
-  const contentArea = container.querySelector('#tab-content-area');
-  renderActiveTab(contentArea, groups, 0);
+function renderField(field) {
+  const value = field.value;
+  if (Array.isArray(value)) {
+    return `
+      <div class="field-item field-item-collection">
+        <label>${escapeHtml(RDA_FIELD_LABELS[field.key] || field.key)}</label>
+        ${renderCollection(value)}
+      </div>
+    `;
+  }
 
-  container.querySelectorAll('.tab-btn').forEach((button) => {
-    button.addEventListener('click', () => {
-      const index = Number(button.dataset.tabIndex || 0);
-      container.querySelectorAll('.tab-btn').forEach((tab) => tab.classList.remove('active'));
-      button.classList.add('active');
-      renderActiveTab(contentArea, groups, index);
-    });
-  });
+  if (value && typeof value === 'object') {
+    return `
+      <div class="field-item">
+        <label>${escapeHtml(RDA_FIELD_LABELS[field.key] || field.key)}</label>
+        <div class="value-box value-box-object">${renderObjectRows(value)}</div>
+      </div>
+    `;
+  }
+
+  return `
+    <div class="field-item">
+      <label>${escapeHtml(RDA_FIELD_LABELS[field.key] || field.key)}</label>
+      <pre class="value-box">${escapeHtml(String(value || 'No registrado.'))}</pre>
+    </div>
+  `;
+}
+
+export function renderDetailTabs(container, rda) {
+  renderDetailBlocks(container, rda);
 }
 
 export function renderDetailBlocks(container, rda) {
@@ -86,14 +90,15 @@ export function renderDetailBlocks(container, rda) {
     </div>
     <div class="detail-page-groups">
       ${groups
-        .map(
-          (group) => `
+        .map((group) => {
+          const hasData = group.fields.some((field) => isMeaningful(field.value));
+          return `
             <section class="detail-block">
               <h3>${escapeHtml(group.title)}</h3>
-              <div class="tab-content-grid">${group.fields.map(renderField).join('')}</div>
+              ${hasData ? `<div class="detail-fields-grid">${group.fields.map(renderField).join('')}</div>` : '<p class="empty-subdivision">No registrado.</p>'}
             </section>
-          `
-        )
+          `;
+        })
         .join('')}
     </div>
   `;
