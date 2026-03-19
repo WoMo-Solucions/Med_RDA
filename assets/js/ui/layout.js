@@ -17,9 +17,9 @@ export function renderAuthForm(container, onSubmit) {
       <div class="login-form-wrap">
         <h1>Iniciar sesión</h1>
         <p class="text-muted">Autentíquese para consultar historial de atención.</p>
-        <form id="auth-form" class="identify-form">
-          <label>Usuario<input name="username" type="text" required /></label>
-          <label>Contraseña<input name="password" type="password" required /></label>
+        <form id="auth-form" class="identify-form" autocomplete="off">
+          <label>Usuario<input name="username" type="text" autocomplete="off" required /></label>
+          <label>Contraseña<input name="password" type="password" autocomplete="new-password" required /></label>
           <button type="submit">Ingresar</button>
         </form>
         <p id="auth-message" class="text-muted"></p>
@@ -70,11 +70,10 @@ export function renderPersistentSearch(container, documentTypes, currentContext,
   const form = container.querySelector('#persistent-search');
   form.addEventListener('submit', (event) => {
     event.preventDefault();
-    const payload = {
+    onSubmit({
       documentType: form.elements.documentType.value,
       documentNumber: form.elements.documentNumber.value
-    };
-    onSubmit(payload);
+    });
   });
   container.querySelector('#logout-btn').addEventListener('click', onLogout);
 }
@@ -90,7 +89,13 @@ export function renderHeaderLogos(container) {
 }
 
 export function setViewerVisibility(showViewer) {
-  document.getElementById('viewer-panel').classList.toggle('hidden', !showViewer);
+  const panel = document.getElementById('viewer-panel');
+  if (panel) panel.classList.toggle('hidden', !showViewer);
+}
+
+export function setAuthVisibility(isLoggedIn) {
+  const panel = document.getElementById('auth-panel');
+  if (panel) panel.classList.toggle('hidden', isLoggedIn);
 }
 
 export function setAuthVisibility(isLoggedIn) {
@@ -104,15 +109,15 @@ export function showIdentifyMessage(message, isError = false) {
   node.classList.toggle('alert', isError);
 }
 
-export function renderPatientHeader(container, patient) {
-  if (!patient) {
-    container.classList.add('hidden');
-    container.innerHTML = '';
-    return;
-  }
+export function renderPatientHeader(anchorNode, patient) {
+  const existing = document.getElementById('patient-header');
+  if (existing) existing.remove();
+  if (!patient || !anchorNode?.parentNode) return;
 
-  container.classList.remove('hidden');
-  container.innerHTML = `
+  const header = document.createElement('header');
+  header.id = 'patient-header';
+  header.className = 'patient-header';
+  header.innerHTML = `
     <h2 class="patient-name">${escapeHtml(patient.fullName)}</h2>
     <div class="patient-inline">
       <span>${escapeHtml(patient.documentType)} ${escapeHtml(patient.documentNumber)}</span>
@@ -123,4 +128,5 @@ export function renderPatientHeader(container, patient) {
     </div>
     <p id="identify-message" class="text-muted"></p>
   `;
+  anchorNode.parentNode.insertBefore(header, anchorNode);
 }

@@ -26,19 +26,47 @@ import {
 const authPanel = document.getElementById('auth-panel');
 const logosHeader = document.getElementById('logos-header');
 const searchPanel = document.getElementById('search-panel');
-const patientHeader = document.getElementById('patient-header');
 const filtersPanel = document.getElementById('filters-panel');
 const resultsPanel = document.getElementById('results-panel');
 const detailPanel = document.getElementById('detail-panel');
 const detailDrawer = document.getElementById('detail-drawer');
-
-document.getElementById('detail-close').addEventListener('click', closeDetailDrawer);
-document.addEventListener('keydown', (event) => {
-  if (event.key === 'Escape') closeDetailDrawer();
-});
+const detailCloseButton = document.getElementById('detail-close');
 
 function getRdaTypes(rdas) {
   return [...new Set((rdas || []).map((item) => item.type).filter(Boolean))];
+}
+
+function bindDetailCloseEvents() {
+  detailCloseButton?.addEventListener('click', closeDetailDrawer);
+  detailDrawer?.addEventListener('click', (event) => {
+    if (event.target === detailDrawer) closeDetailDrawer();
+  });
+  document.addEventListener('keydown', (event) => {
+    if (event.key === 'Escape') closeDetailDrawer();
+  });
+}
+
+function bindAuth() {
+  renderAuthForm(authPanel, async ({ username, password }) => {
+    try {
+      await login(username, password);
+      setAuthVisibility(true);
+      showAuthMessage('');
+      await bootViewer();
+    } catch (error) {
+      showAuthMessage(error.message || 'No fue posible iniciar sesión.', true);
+    }
+  });
+}
+
+function openDetailPage(recordCode) {
+  const { patient } = getState();
+  const params = new URLSearchParams({
+    recordCode,
+    documentType: patient?.documentType || '',
+    documentNumber: patient?.documentNumber || ''
+  });
+  window.location.assign(`./detail.html?${params.toString()}`);
 }
 
 function renderBaseViewer() {
@@ -53,7 +81,7 @@ function renderBaseViewer() {
     },
     doLogout
   );
-  renderPatientHeader(patientHeader, state.patient);
+  renderPatientHeader(resultsPanel, state.patient);
   renderFilters(filtersPanel, getRdaTypes(state.allRdas), state.filters, {
     onSearch: async (newFilters) => {
       updateFilters(newFilters);
@@ -69,11 +97,19 @@ function renderBaseViewer() {
       await loadPatientFlow(current, true);
     }
   });
-  renderResults(resultsPanel, state.allRdas, async (recordCode) => {
-    const detail = await loadCompositionDocument(recordCode);
-    updateState({ selectedRda: detail });
-    renderDetail(detailPanel, detail);
-    showDetailDrawer();
+  renderResults(resultsPanel, state.allRdas, {
+    detailView: state.detailView,
+    onDetailViewChange: (detailView) => updateState({ detailView }),
+    onSelect: async (recordCode) => {
+      if (getState().detailView === 'page') {
+        openDetailPage(recordCode);
+        return;
+      }
+      const detail = await loadCompositionDocument(recordCode);
+      updateState({ selectedRda: detail });
+      renderDetail(detailPanel, detail);
+      showDetailDrawer();
+    }
   });
 }
 
@@ -101,12 +137,18 @@ async function loadPatientFlow(context, applyCurrentFilters = false) {
 }
 
 async function doLogout() {
-  await logout();
-  updateState({ patient: null, allRdas: [], selectedRda: null });
+  try {
+    await logout();
+  } catch (_error) {
+    // no-op: the local UI must still return to a clean login state
+  }
+
+  updateState({ patient: null, allRdas: [], selectedRda: null, detailView: 'popup' });
+  resetFilters();
+  closeDetailDrawer();
   setViewerVisibility(false);
   setAuthVisibility(false);
-  closeDetailDrawer();
-  showAuthMessage('Sesión cerrada correctamente.');
+  bindAuth();
 }
 
 async function bootViewer() {
@@ -118,24 +160,17 @@ async function bootViewer() {
 }
 
 async function boot() {
-  renderAuthForm(authPanel, async ({ username, password }) => {
-    try {
-      await login(username, password);
-      setAuthVisibility(true);
-      showAuthMessage('');
-      await bootViewer();
-    } catch (error) {
-      showAuthMessage(error.message || 'No fue posible iniciar sesión.', true);
-    }
-  });
+  bindDetailCloseEvents();
+  bindAuth();
 
   try {
     await checkSession();
     setAuthVisibility(true);
     await bootViewer();
-  } catch (error) {
+  } catch (_error) {
     setAuthVisibility(false);
     setViewerVisibility(false);
+    bindAuth();
   }
 }
 

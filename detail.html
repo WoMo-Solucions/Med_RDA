@@ -7,12 +7,15 @@
     <link rel="stylesheet" href="./assets/css/visor-rda.css" />
   </head>
   <body>
-    <main class="app-shell">
-      <section class="panel viewer-panel detail-page-shell">
-        <header class="detail-page-toolbar">
-          <button id="back-to-viewer" type="button" class="secondary">Volver</button>
-        </header>
-        <article class="panel-inner" id="detail-page-content"></article>
+    <main class="app-shell detail-page-shell">
+      <section class="panel viewer-panel detail-page-viewer" id="viewer-panel">
+        <header id="logos-header" class="logos-header"></header>
+        <div class="detail-page-toolbar">
+          <a href="./" id="detail-page-back" class="detail-page-back">← Volver al historial</a>
+        </div>
+        <div id="detail-page-anchor"></div>
+        <article class="panel-inner detail-page-panel" id="detail-page-panel"></article>
+        <p id="detail-page-feedback" class="text-muted"></p>
       </section>
     </main>
     <script type="module" src="./assets/js/detail-page.js"></script>

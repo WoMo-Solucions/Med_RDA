@@ -1,16 +1,23 @@
 import { renderDetailTabs } from './detail-renderer.js';
 
 export function showDetailDrawer() {
-  document.getElementById('detail-drawer').classList.add('open');
+  const drawer = document.getElementById('detail-drawer');
+  drawer?.classList.add('open');
+  drawer?.setAttribute('aria-hidden', 'false');
+  document.body.classList.add('drawer-open');
 }
 
 export function closeDetailDrawer() {
-  document.getElementById('detail-drawer').classList.remove('open');
+  const drawer = document.getElementById('detail-drawer');
+  drawer?.classList.remove('open');
+  drawer?.setAttribute('aria-hidden', 'true');
+  document.body.classList.remove('drawer-open');
 }
 
 export function renderDetail(container, rda) {
+  if (!container) return;
   if (!rda) {
-    container.innerHTML = '<h3>Detalle RDA</h3><p class="text-muted">Seleccione una atención para visualizar su composición clínica.</p>';
+    container.innerHTML = '<div class="empty-group-state">Seleccione un RDA para visualizar su detalle.</div>';
     return;
   }
 
