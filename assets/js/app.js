@@ -50,6 +50,7 @@ function bindAuth() {
   renderAuthForm(authPanel, async ({ username, password }) => {
     try {
       await login(username, password);
+<<<<<<< codex/finalize-system-implementation-and-hardening-016t2o
       await bootViewer();
       setAuthVisibility(true);
       showAuthMessage('');
@@ -57,6 +58,12 @@ function bindAuth() {
       setViewerVisibility(false);
       setAuthVisibility(false);
       bindAuth();
+=======
+      setAuthVisibility(true);
+      showAuthMessage('');
+      await bootViewer();
+    } catch (error) {
+>>>>>>> main
       showAuthMessage(error.message || 'No fue posible iniciar sesión.', true);
     }
   });
