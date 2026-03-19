@@ -4,6 +4,8 @@ services:
       context: .
       dockerfile: Dockerfile
     container_name: med_rda_fullstack
+    env_file:
+      - .env
     ports:
       - "8086:8086"
     volumes:

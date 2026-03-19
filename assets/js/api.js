@@ -3,6 +3,7 @@ const API_BASE = '/api';
 async function apiRequest(path, payload, method = 'POST') {
   const response = await fetch(`${API_BASE}${path}`, {
     method,
+    credentials: 'same-origin',
     headers: { 'Content-Type': 'application/json' },
     body: method === 'GET' ? undefined : JSON.stringify(payload || {})
   });
@@ -12,6 +13,18 @@ async function apiRequest(path, payload, method = 'POST') {
     throw new Error(data.error || `Error HTTP ${response.status}`);
   }
   return data.data;
+}
+
+export async function login(username, password) {
+  return apiRequest('/auth/login', { username, password });
+}
+
+export async function checkSession() {
+  return apiRequest('/auth/session', null, 'GET');
+}
+
+export async function logout() {
+  return apiRequest('/auth/logout');
 }
 
 export async function loadDocumentTypes() {
