@@ -28,7 +28,16 @@ body {
   background: linear-gradient(180deg, #f7faff 0%, var(--bg) 100%);
 }
 
-.hidden { display: none !important; }
+.hidden {
+  display: none !important;
+}
+
+h1,
+h2,
+h3,
+p {
+  margin: 0;
+}
 
 .app-shell {
   height: 100vh;
@@ -43,7 +52,10 @@ body {
 
 .identify-panel,
 .viewer-panel,
-.panel-inner {
+.panel-inner,
+.sidebar-card,
+.patient-header,
+.detail-panel {
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: var(--radius);
@@ -90,10 +102,6 @@ body {
   gap: 0.9rem;
 }
 
-h1, h2, h3, p {
-  margin: 0;
-}
-
 label {
   display: grid;
   gap: 0.35rem;
@@ -101,7 +109,9 @@ label {
   color: var(--text);
 }
 
-input, select, button {
+input,
+select,
+button {
   width: 100%;
   border-radius: 10px;
   border: 1px solid var(--border);
@@ -117,7 +127,9 @@ button {
   transition: background 0.2s ease;
 }
 
-button:hover { background: #194e77; }
+button:hover {
+  background: #194e77;
+}
 
 button.secondary {
   background: var(--surface-alt);
@@ -125,17 +137,17 @@ button.secondary {
   border: 1px solid var(--primary-soft);
 }
 
+#identify-message {
+  min-height: 1.25rem;
+}
+
 .viewer-panel {
   height: calc(100vh - 2rem);
   padding: 1rem;
   display: grid;
-<<<<<<< codex/refactor-ui-layout-to-two-column-design-sv35a2
   grid-template-rows: auto minmax(0, 1fr);
   gap: 1rem;
   overflow: hidden;
-=======
-  gap: 1rem;
->>>>>>> main
 }
 
 .top-header-grid {
@@ -152,9 +164,17 @@ button.secondary {
   align-items: center;
 }
 
-.logo-left { justify-content: flex-start; }
-.logo-center { justify-content: center; }
-.logo-right { justify-content: flex-end; }
+.logo-left {
+  justify-content: flex-start;
+}
+
+.logo-center {
+  justify-content: center;
+}
+
+.logo-right {
+  justify-content: flex-end;
+}
 
 .logo-left img,
 .logo-center img,
@@ -166,11 +186,8 @@ button.secondary {
 }
 
 .viewer-dashboard {
-<<<<<<< codex/refactor-ui-layout-to-two-column-design-sv35a2
   height: 100%;
   min-height: 0;
-=======
->>>>>>> main
   display: grid;
   grid-template-columns: 280px minmax(0, 1fr);
   gap: 1rem;
@@ -179,25 +196,11 @@ button.secondary {
 
 .viewer-sidebar {
   position: sticky;
-<<<<<<< codex/refactor-ui-layout-to-two-column-design-sv35a2
   top: 0;
-=======
-  top: 1rem;
->>>>>>> main
-}
-
-.sidebar-card,
-.search-toolbar-card,
-.patient-header {
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  box-shadow: var(--shadow);
 }
 
 .sidebar-card {
   padding: 1rem;
-<<<<<<< codex/refactor-ui-layout-to-two-column-design-sv35a2
 }
 
 .sidebar-card-head {
@@ -219,125 +222,13 @@ button.secondary {
   min-width: 0;
   min-height: 0;
   display: grid;
-  grid-template-rows: auto auto auto minmax(0, 1fr);
+  grid-template-rows: auto auto minmax(0, 1fr);
   gap: 0.9rem;
-}
-
-=======
-}
-
-.sidebar-card-head {
-  display: grid;
-  gap: 0.35rem;
-  margin-bottom: 0.9rem;
-}
-
-.sidebar-form {
-  display: grid;
-  gap: 0.85rem;
-}
-
-.danger-action {
-  margin-top: 0.35rem;
-}
-
-.viewer-content {
-  min-width: 0;
-  display: grid;
-  gap: 0.9rem;
-}
-
->>>>>>> main
-.search-toolbar-card {
-  padding: 0.9rem 1rem;
-  display: flex;
-  align-items: end;
-  justify-content: space-between;
-  gap: 1rem;
-}
-
-.search-panel {
-  min-width: 0;
-}
-
-.search-header-form {
-  flex: 1;
-  min-width: 0;
-  display: grid;
-  grid-template-columns: minmax(200px, 1fr) minmax(240px, 1.1fr) 140px;
-  gap: 0.75rem;
-  align-items: end;
-<<<<<<< codex/refactor-ui-layout-to-two-column-design-sv35a2
-}
-
-.search-header-form button {
-  align-self: end;
-}
-
-.viewer-toolbar-actions {
-  display: flex;
-  align-items: end;
-  justify-content: flex-end;
-  flex-shrink: 0;
-}
-
-.detail-mode-control {
-  width: auto;
-  display: inline-flex;
-  align-items: center;
-  gap: 0.55rem;
-  padding: 0.65rem 0.8rem;
-  border: 1px solid var(--border);
-  border-radius: 10px;
-  background: #f8fbff;
-  color: var(--text);
-  white-space: nowrap;
-}
-
-.detail-mode-control input {
-  width: 16px;
-  height: 16px;
-  margin: 0;
-  accent-color: var(--primary);
-}
-
-.detail-mode-control span {
-  font-size: 0.9rem;
-}
-
-#identify-message {
-  min-height: 1.25rem;
 }
 
 .patient-header {
   padding: 1rem 1.1rem;
   display: flex;
-=======
-}
-
-.search-header-form button {
-  align-self: end;
-}
-
-.viewer-toolbar-actions {
-  display: flex;
-  align-items: end;
-  justify-content: flex-end;
-  flex-shrink: 0;
-}
-
-.detail-mode-control {
-  width: 130px;
-}
-
-#identify-message {
-  min-height: 1.25rem;
-}
-
-.patient-header {
-  padding: 1rem 1.1rem;
-  display: flex;
->>>>>>> main
   flex-wrap: wrap;
   align-items: center;
   gap: 1rem 1.4rem;
@@ -369,12 +260,14 @@ button.secondary {
 .panel-inner {
   padding: 1rem;
   min-width: 0;
-<<<<<<< codex/refactor-ui-layout-to-two-column-design-sv35a2
   min-height: 0;
   display: grid;
   grid-template-rows: auto minmax(0, 1fr);
-=======
->>>>>>> main
+}
+
+.detail-panel {
+  padding: 0;
+  overflow: hidden;
 }
 
 .results-head {
@@ -391,14 +284,9 @@ button.secondary {
 }
 
 .results-table-wrap {
-<<<<<<< codex/refactor-ui-layout-to-two-column-design-sv35a2
   min-height: 0;
   height: 100%;
   overflow: auto;
-=======
-  overflow: auto;
-  max-height: 62vh;
->>>>>>> main
   border: 1px solid var(--border);
   border-radius: 10px;
 }
@@ -413,11 +301,7 @@ button.secondary {
   position: sticky;
   top: 0;
   background: #f7fbff;
-<<<<<<< codex/refactor-ui-layout-to-two-column-design-sv35a2
   z-index: 0;
-=======
-  z-index: 1;
->>>>>>> main
 }
 
 .results-table th,
@@ -432,10 +316,17 @@ button.secondary {
   padding: 1rem 0.75rem;
 }
 
-.history-row { cursor: pointer; }
-.history-row:hover { background: #f6faff; }
+.history-row {
+  cursor: pointer;
+}
 
-.text-muted { color: var(--text-muted); }
+.history-row:hover {
+  background: #f6faff;
+}
+
+.text-muted {
+  color: var(--text-muted);
+}
 
 .tag {
   background: var(--primary-soft);
@@ -539,6 +430,69 @@ button.secondary {
   font-family: inherit;
 }
 
+.detail-inline-shell {
+  min-height: 0;
+  height: 100%;
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+}
+
+.detail-inline-head {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 1rem;
+  align-items: center;
+  padding: 1rem;
+  border-bottom: 1px solid var(--border);
+}
+
+.detail-inline-title {
+  display: grid;
+  gap: 0.25rem;
+}
+
+.detail-inline-body {
+  min-height: 0;
+  overflow: auto;
+  padding: 1rem;
+}
+
+.detail-nav-bar {
+  display: grid;
+  grid-template-columns: 44px 44px 44px;
+  gap: 0.75rem;
+  align-items: center;
+}
+
+.detail-nav-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  border-radius: 999px;
+  background: var(--surface-alt);
+  color: var(--primary);
+  border: 1px solid var(--primary-soft);
+  font-size: 1.2rem;
+  line-height: 1;
+}
+
+.detail-nav-btn:hover:not(:disabled) {
+  background: var(--primary);
+  color: #fff;
+}
+
+.detail-nav-btn:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+.detail-nav-btn-close {
+  background: var(--primary);
+  color: #fff;
+}
 
 .detail-page-shell {
   max-width: 1200px;
@@ -578,19 +532,17 @@ button.secondary {
     position: static;
   }
 
-  .search-toolbar-card {
-    flex-direction: column;
-    align-items: stretch;
+  .detail-inline-head {
+    grid-template-columns: 1fr;
   }
 
-  .viewer-toolbar-actions {
-    justify-content: flex-start;
+  .detail-nav-bar {
+    justify-content: center;
   }
 }
 
 @media (max-width: 860px) {
   .login-shell,
-  .search-header-form,
   .tab-content-grid {
     grid-template-columns: 1fr;
   }
