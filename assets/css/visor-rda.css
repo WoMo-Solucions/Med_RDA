@@ -28,7 +28,16 @@ body {
   background: linear-gradient(180deg, #f7faff 0%, var(--bg) 100%);
 }
 
-.hidden { display: none !important; }
+.hidden {
+  display: none !important;
+}
+
+h1,
+h2,
+h3,
+p {
+  margin: 0;
+}
 
 .app-shell {
   height: 100vh;
@@ -43,7 +52,10 @@ body {
 
 .identify-panel,
 .viewer-panel,
-.panel-inner {
+.panel-inner,
+.sidebar-card,
+.patient-header,
+.detail-panel {
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: var(--radius);
@@ -147,12 +159,18 @@ button {
   transition: background 0.2s ease;
 }
 
-button:hover { background: #194e77; }
+button:hover {
+  background: #194e77;
+}
 
 button.secondary {
   background: var(--surface-alt);
   color: var(--primary);
   border: 1px solid var(--primary-soft);
+}
+
+#identify-message {
+  min-height: 1.25rem;
 }
 
 .viewer-panel {
@@ -178,9 +196,17 @@ button.secondary {
   align-items: center;
 }
 
-.logo-left { justify-content: flex-start; }
-.logo-center { justify-content: center; }
-.logo-right { justify-content: flex-end; }
+.logo-left {
+  justify-content: flex-start;
+}
+
+.logo-center {
+  justify-content: center;
+}
+
+.logo-right {
+  justify-content: flex-end;
+}
 
 .logo-left img,
 .logo-center img,
@@ -338,7 +364,17 @@ button.secondary {
 .history-row { cursor: pointer; }
 .history-row:hover { background: #f6faff; }
 
-.text-muted { color: var(--text-muted); }
+.history-row {
+  cursor: pointer;
+}
+
+.history-row:hover {
+  background: #f6faff;
+}
+
+.text-muted {
+  color: var(--text-muted);
+}
 
 .tag {
   background: var(--primary-soft);
@@ -554,6 +590,24 @@ button.secondary {
   }
 
   .detail-nav-bar {
+    justify-content: center;
+  }
+}
+
+@media (max-width: 860px) {
+  .login-shell,
+  .tab-content-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .top-header-grid {
+    grid-template-columns: 1fr;
+    justify-items: center;
+  }
+
+  .logo-left,
+  .logo-center,
+  .logo-right {
     justify-content: center;
   }
 }
