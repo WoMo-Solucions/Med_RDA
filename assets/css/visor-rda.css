@@ -129,9 +129,13 @@ button.secondary {
   height: calc(100vh - 2rem);
   padding: 1rem;
   display: grid;
+<<<<<<< codex/refactor-ui-layout-to-two-column-design-sv35a2
   grid-template-rows: auto minmax(0, 1fr);
   gap: 1rem;
   overflow: hidden;
+=======
+  gap: 1rem;
+>>>>>>> main
 }
 
 .top-header-grid {
@@ -162,8 +166,11 @@ button.secondary {
 }
 
 .viewer-dashboard {
+<<<<<<< codex/refactor-ui-layout-to-two-column-design-sv35a2
   height: 100%;
   min-height: 0;
+=======
+>>>>>>> main
   display: grid;
   grid-template-columns: 280px minmax(0, 1fr);
   gap: 1rem;
@@ -172,7 +179,11 @@ button.secondary {
 
 .viewer-sidebar {
   position: sticky;
+<<<<<<< codex/refactor-ui-layout-to-two-column-design-sv35a2
   top: 0;
+=======
+  top: 1rem;
+>>>>>>> main
 }
 
 .sidebar-card,
@@ -186,6 +197,7 @@ button.secondary {
 
 .sidebar-card {
   padding: 1rem;
+<<<<<<< codex/refactor-ui-layout-to-two-column-design-sv35a2
 }
 
 .sidebar-card-head {
@@ -211,6 +223,31 @@ button.secondary {
   gap: 0.9rem;
 }
 
+=======
+}
+
+.sidebar-card-head {
+  display: grid;
+  gap: 0.35rem;
+  margin-bottom: 0.9rem;
+}
+
+.sidebar-form {
+  display: grid;
+  gap: 0.85rem;
+}
+
+.danger-action {
+  margin-top: 0.35rem;
+}
+
+.viewer-content {
+  min-width: 0;
+  display: grid;
+  gap: 0.9rem;
+}
+
+>>>>>>> main
 .search-toolbar-card {
   padding: 0.9rem 1rem;
   display: flex;
@@ -230,6 +267,7 @@ button.secondary {
   grid-template-columns: minmax(200px, 1fr) minmax(240px, 1.1fr) 140px;
   gap: 0.75rem;
   align-items: end;
+<<<<<<< codex/refactor-ui-layout-to-two-column-design-sv35a2
 }
 
 .search-header-form button {
@@ -274,6 +312,32 @@ button.secondary {
 .patient-header {
   padding: 1rem 1.1rem;
   display: flex;
+=======
+}
+
+.search-header-form button {
+  align-self: end;
+}
+
+.viewer-toolbar-actions {
+  display: flex;
+  align-items: end;
+  justify-content: flex-end;
+  flex-shrink: 0;
+}
+
+.detail-mode-control {
+  width: 130px;
+}
+
+#identify-message {
+  min-height: 1.25rem;
+}
+
+.patient-header {
+  padding: 1rem 1.1rem;
+  display: flex;
+>>>>>>> main
   flex-wrap: wrap;
   align-items: center;
   gap: 1rem 1.4rem;
@@ -305,9 +369,12 @@ button.secondary {
 .panel-inner {
   padding: 1rem;
   min-width: 0;
+<<<<<<< codex/refactor-ui-layout-to-two-column-design-sv35a2
   min-height: 0;
   display: grid;
   grid-template-rows: auto minmax(0, 1fr);
+=======
+>>>>>>> main
 }
 
 .results-head {
@@ -324,9 +391,14 @@ button.secondary {
 }
 
 .results-table-wrap {
+<<<<<<< codex/refactor-ui-layout-to-two-column-design-sv35a2
   min-height: 0;
   height: 100%;
   overflow: auto;
+=======
+  overflow: auto;
+  max-height: 62vh;
+>>>>>>> main
   border: 1px solid var(--border);
   border-radius: 10px;
 }
@@ -341,7 +413,11 @@ button.secondary {
   position: sticky;
   top: 0;
   background: #f7fbff;
+<<<<<<< codex/refactor-ui-layout-to-two-column-design-sv35a2
   z-index: 0;
+=======
+  z-index: 1;
+>>>>>>> main
 }
 
 .results-table th,
