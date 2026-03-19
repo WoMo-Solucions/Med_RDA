@@ -26,7 +26,6 @@ export function renderAuthForm(container, onSubmit) {
       </div>
     </div>
   `;
-
   container.querySelector('#auth-form').addEventListener('submit', (event) => {
     event.preventDefault();
     const data = new FormData(event.currentTarget);
@@ -66,20 +65,18 @@ export function renderPersistentSearch(container, documentTypes, currentContext,
         <button type="submit">Consultar</button>
       </form>
       <div class="viewer-toolbar-actions">
-        <label class="detail-mode-control">Detalle
-          <select name="detailOpenMode">
-            <option value="modal" ${detailOpenMode === 'modal' ? 'selected' : ''}>Popup</option>
-            <option value="page" ${detailOpenMode === 'page' ? 'selected' : ''}>Página</option>
-          </select>
+        <label class="detail-mode-control">
+          <input name="detailOpenMode" type="checkbox" ${detailOpenMode === 'page' ? 'checked' : ''} />
+          <span>Visualizar en pagina</span>
         </label>
       </div>
     </div>
   `;
 
   const form = container.querySelector('#persistent-search');
-  const detailMode = container.querySelector('select[name="detailOpenMode"]');
+  const detailMode = container.querySelector('input[name="detailOpenMode"]');
 
-  detailMode.addEventListener('change', () => onModeChange(detailMode.value));
+  detailMode.addEventListener('change', () => onModeChange(detailMode.checked ? 'page' : 'modal'));
   form.addEventListener('submit', (event) => {
     event.preventDefault();
     const payload = {

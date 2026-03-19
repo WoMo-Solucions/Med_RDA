@@ -16,6 +16,11 @@
   box-sizing: border-box;
 }
 
+html,
+body {
+  height: 100%;
+}
+
 body {
   margin: 0;
   font-family: Inter, Segoe UI, Roboto, Arial, sans-serif;
@@ -26,8 +31,9 @@ body {
 .hidden { display: none !important; }
 
 .app-shell {
-  min-height: 100vh;
+  height: 100vh;
   padding: 1rem;
+  overflow: hidden;
 }
 
 .panel {
@@ -120,9 +126,16 @@ button.secondary {
 }
 
 .viewer-panel {
+  height: calc(100vh - 2rem);
   padding: 1rem;
   display: grid;
+<<<<<<< codex/refactor-ui-layout-to-two-column-design-sv35a2
+  grid-template-rows: auto minmax(0, 1fr);
   gap: 1rem;
+  overflow: hidden;
+=======
+  gap: 1rem;
+>>>>>>> main
 }
 
 .top-header-grid {
@@ -153,6 +166,11 @@ button.secondary {
 }
 
 .viewer-dashboard {
+<<<<<<< codex/refactor-ui-layout-to-two-column-design-sv35a2
+  height: 100%;
+  min-height: 0;
+=======
+>>>>>>> main
   display: grid;
   grid-template-columns: 280px minmax(0, 1fr);
   gap: 1rem;
@@ -161,7 +179,11 @@ button.secondary {
 
 .viewer-sidebar {
   position: sticky;
+<<<<<<< codex/refactor-ui-layout-to-two-column-design-sv35a2
+  top: 0;
+=======
   top: 1rem;
+>>>>>>> main
 }
 
 .sidebar-card,
@@ -175,6 +197,33 @@ button.secondary {
 
 .sidebar-card {
   padding: 1rem;
+<<<<<<< codex/refactor-ui-layout-to-two-column-design-sv35a2
+}
+
+.sidebar-card-head {
+  display: grid;
+  gap: 0.35rem;
+  margin-bottom: 0.9rem;
+}
+
+.sidebar-form {
+  display: grid;
+  gap: 0.85rem;
+}
+
+.danger-action {
+  margin-top: 0.35rem;
+}
+
+.viewer-content {
+  min-width: 0;
+  min-height: 0;
+  display: grid;
+  grid-template-rows: auto auto auto minmax(0, 1fr);
+  gap: 0.9rem;
+}
+
+=======
 }
 
 .sidebar-card-head {
@@ -198,6 +247,7 @@ button.secondary {
   gap: 0.9rem;
 }
 
+>>>>>>> main
 .search-toolbar-card {
   padding: 0.9rem 1rem;
   display: flex;
@@ -217,6 +267,52 @@ button.secondary {
   grid-template-columns: minmax(200px, 1fr) minmax(240px, 1.1fr) 140px;
   gap: 0.75rem;
   align-items: end;
+<<<<<<< codex/refactor-ui-layout-to-two-column-design-sv35a2
+}
+
+.search-header-form button {
+  align-self: end;
+}
+
+.viewer-toolbar-actions {
+  display: flex;
+  align-items: end;
+  justify-content: flex-end;
+  flex-shrink: 0;
+}
+
+.detail-mode-control {
+  width: auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.55rem;
+  padding: 0.65rem 0.8rem;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: #f8fbff;
+  color: var(--text);
+  white-space: nowrap;
+}
+
+.detail-mode-control input {
+  width: 16px;
+  height: 16px;
+  margin: 0;
+  accent-color: var(--primary);
+}
+
+.detail-mode-control span {
+  font-size: 0.9rem;
+}
+
+#identify-message {
+  min-height: 1.25rem;
+}
+
+.patient-header {
+  padding: 1rem 1.1rem;
+  display: flex;
+=======
 }
 
 .search-header-form button {
@@ -241,6 +337,7 @@ button.secondary {
 .patient-header {
   padding: 1rem 1.1rem;
   display: flex;
+>>>>>>> main
   flex-wrap: wrap;
   align-items: center;
   gap: 1rem 1.4rem;
@@ -272,6 +369,12 @@ button.secondary {
 .panel-inner {
   padding: 1rem;
   min-width: 0;
+<<<<<<< codex/refactor-ui-layout-to-two-column-design-sv35a2
+  min-height: 0;
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+=======
+>>>>>>> main
 }
 
 .results-head {
@@ -288,8 +391,14 @@ button.secondary {
 }
 
 .results-table-wrap {
+<<<<<<< codex/refactor-ui-layout-to-two-column-design-sv35a2
+  min-height: 0;
+  height: 100%;
+  overflow: auto;
+=======
   overflow: auto;
   max-height: 62vh;
+>>>>>>> main
   border: 1px solid var(--border);
   border-radius: 10px;
 }
@@ -304,7 +413,11 @@ button.secondary {
   position: sticky;
   top: 0;
   background: #f7fbff;
+<<<<<<< codex/refactor-ui-layout-to-two-column-design-sv35a2
+  z-index: 0;
+=======
   z-index: 1;
+>>>>>>> main
 }
 
 .results-table th,
@@ -344,6 +457,7 @@ button.secondary {
 .modal {
   position: fixed;
   inset: 0;
+  z-index: 1000;
   background: rgba(0, 0, 0, 0.45);
   display: flex;
   justify-content: center;
@@ -360,6 +474,7 @@ button.secondary {
   border: 1px solid var(--border);
   padding: 1rem;
   position: relative;
+  z-index: 1001;
 }
 
 .modal-x {
