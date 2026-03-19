@@ -63,7 +63,6 @@ function renderBaseViewer() {
       setDetailOpenMode(mode);
       renderBaseViewer();
     },
-    doLogout
   );
   renderPatientHeader(patientHeader, state.patient);
   renderFilters(filtersPanel, getRdaTypes(state.allRdas), state.filters, {
@@ -79,7 +78,8 @@ function renderBaseViewer() {
       const current = getState().patient;
       if (!current) return;
       await loadPatientFlow(current, true);
-    }
+    },
+    onLogout: doLogout
   });
   renderResults(resultsPanel, state.allRdas, async (recordCode) => {
     if (getState().detailOpenMode === 'page') {
