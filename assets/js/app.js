@@ -79,21 +79,6 @@ function renderBaseViewer() {
     onConsult: async ({ context, filters }) => {
       await loadPatientFlow(context, filters);
     },
-    onClear: async () => {
-      resetFilters();
-      updateFilters(clearFilters());
-      updateState({ selectedRda: null });
-      const currentContext = getDefaultSearchContext();
-      if (!currentContext.documentNumber) {
-        renderBaseViewer();
-        return;
-      }
-      if (!getState().patient) {
-        renderBaseViewer();
-        return;
-      }
-      await loadPatientFlow(currentContext, clearFilters());
-    },
     onLogout: doLogout
   });
 

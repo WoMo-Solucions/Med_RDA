@@ -102,6 +102,10 @@ p {
   gap: 0.9rem;
 }
 
+h1, h2, h3, p {
+  margin: 0;
+}
+
 label {
   display: grid;
   gap: 0.35rem;
@@ -109,14 +113,42 @@ label {
   color: var(--text);
 }
 
-input,
-select,
-button {
+input, select, button {
   width: 100%;
   border-radius: 10px;
   border: 1px solid var(--border);
   padding: 0.65rem 0.8rem;
   font-size: 0.95rem;
+  color: var(--text);
+  background: #fff;
+}
+
+input:hover,
+select:hover {
+  border-color: #a9bfd4;
+}
+
+input:focus,
+select:focus,
+button:focus-visible,
+.tab-btn:focus-visible,
+.detail-nav-btn:focus-visible {
+  outline: 2px solid rgba(30, 93, 143, 0.18);
+  outline-offset: 1px;
+  border-color: var(--primary);
+  box-shadow: 0 0 0 2px rgba(30, 93, 143, 0.12);
+}
+
+select option {
+  color: var(--text);
+  background: #fff;
+}
+
+select option:checked,
+select option:hover,
+select option:focus {
+  background: var(--primary);
+  color: #fff;
 }
 
 button {
@@ -199,6 +231,15 @@ button.secondary {
   top: 0;
 }
 
+.sidebar-card,
+.patient-header,
+.detail-panel {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+}
+
 .sidebar-card {
   padding: 1rem;
 }
@@ -224,6 +265,10 @@ button.secondary {
   display: grid;
   grid-template-rows: auto auto minmax(0, 1fr);
   gap: 0.9rem;
+}
+
+#identify-message {
+  min-height: 1.25rem;
 }
 
 .patient-header {
@@ -315,6 +360,9 @@ button.secondary {
 .results-empty {
   padding: 1rem 0.75rem;
 }
+
+.history-row { cursor: pointer; }
+.history-row:hover { background: #f6faff; }
 
 .history-row {
   cursor: pointer;
@@ -454,7 +502,8 @@ button.secondary {
 .detail-inline-body {
   min-height: 0;
   overflow: auto;
-  padding: 1rem;
+  padding: 1.5rem;
+  background: linear-gradient(180deg, #fbfdff 0%, #f4f8fd 100%);
 }
 
 .detail-nav-bar {
@@ -494,6 +543,7 @@ button.secondary {
   color: #fff;
 }
 
+
 .detail-page-shell {
   max-width: 1200px;
 }
@@ -504,7 +554,9 @@ button.secondary {
 }
 
 .detail-page-title-wrap {
-  margin-bottom: 1rem;
+  margin-bottom: 1.25rem;
+  display: grid;
+  gap: 0.3rem;
 }
 
 .detail-page-groups {
@@ -515,8 +567,9 @@ button.secondary {
 .detail-block {
   border: 1px solid var(--border);
   border-radius: var(--radius);
-  padding: 1rem;
-  background: var(--surface-alt);
+  padding: 1.15rem;
+  background: #fff;
+  box-shadow: 0 6px 18px rgba(19, 44, 68, 0.05);
 }
 
 .detail-block h3 {
@@ -537,6 +590,24 @@ button.secondary {
   }
 
   .detail-nav-bar {
+    justify-content: center;
+  }
+}
+
+@media (max-width: 860px) {
+  .login-shell,
+  .tab-content-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .top-header-grid {
+    grid-template-columns: 1fr;
+    justify-items: center;
+  }
+
+  .logo-left,
+  .logo-center,
+  .logo-right {
     justify-content: center;
   }
 }

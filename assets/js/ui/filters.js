@@ -15,7 +15,7 @@ const LABELS = {
 };
 
 export function renderFilters(container, config) {
-  const { documentTypes, currentContext, rdaTypes, defaultFilters, onConsult, onClear, onLogout } = config;
+  const { documentTypes, currentContext, defaultFilters, onConsult, onLogout } = config;
   const documentTypeOptions = documentTypes
     .map(
       (item) =>
@@ -23,9 +23,7 @@ export function renderFilters(container, config) {
     )
     .join('');
 
-  const sortedTypes = ['RDA_PACIENTE', 'RDA_CONSULTA_EXTERNA', 'RDA_HOSPITALIZACION', 'RDA_URGENCIAS'].filter((type) =>
-    rdaTypes.includes(type)
-  );
+  const sortedTypes = ['RDA_PACIENTE', 'RDA_CONSULTA_EXTERNA', 'RDA_HOSPITALIZACION', 'RDA_URGENCIAS'];
   const typeOptions = sortedTypes
     .map((type) => `<option value="${escapeHtml(type)}">${escapeHtml(LABELS[type] || type)}</option>`)
     .join('');
@@ -49,7 +47,6 @@ export function renderFilters(container, config) {
         <label>Fecha desde<input type="date" name="fromDate" value="${escapeHtml(defaultFilters.fromDate)}" /></label>
         <label>Fecha hasta<input type="date" name="toDate" value="${escapeHtml(defaultFilters.toDate)}" /></label>
         <button type="submit">Consultar</button>
-        <button type="button" class="secondary" id="clear-filters">Limpiar</button>
         <button type="button" class="secondary danger-action" id="logout-btn">Cerrar sesión</button>
       </form>
     </div>
@@ -74,6 +71,5 @@ export function renderFilters(container, config) {
     });
   });
 
-  container.querySelector('#clear-filters').addEventListener('click', onClear);
   container.querySelector('#logout-btn').addEventListener('click', onLogout);
 }

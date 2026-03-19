@@ -1,4 +1,4 @@
-import { renderDetailTabs } from './detail-renderer.js';
+import { renderDetailBlocks } from './detail-renderer.js';
 
 function escapeHtml(value) {
   return String(value ?? '')
@@ -36,7 +36,7 @@ export function renderDetail(container, rda, options = {}) {
     </section>
   `;
 
-  renderDetailTabs(container.querySelector('.detail-inline-body'), rda);
+  renderDetailBlocks(container.querySelector('.detail-inline-body'), rda);
 
   container.querySelector('[data-detail-nav="previous"]')?.addEventListener('click', options.onPrevious || (() => {}));
   container.querySelector('[data-detail-nav="next"]')?.addEventListener('click', options.onNext || (() => {}));
