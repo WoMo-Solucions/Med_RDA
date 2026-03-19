@@ -1,43 +1,28 @@
-import { checkSession, getPatientContext, loadCompositionDocument } from './api.js';
-import { renderDetail } from './ui/detail.js';
-import { renderHeaderLogos, renderPatientHeader } from './ui/layout.js';
+import { checkSession, loadCompositionDocument } from './api.js';
+import { renderDetailBlocks } from './ui/detail-renderer.js';
 
-const logosHeader = document.getElementById('logos-header');
-const pageAnchor = document.getElementById('detail-page-anchor');
-const detailPanel = document.getElementById('detail-page-panel');
-const feedback = document.getElementById('detail-page-feedback');
-const backLink = document.getElementById('detail-page-back');
+const content = document.getElementById('detail-page-content');
+const backButton = document.getElementById('back-to-viewer');
 
-function getParams() {
-  const params = new URLSearchParams(window.location.search);
-  return {
-    recordCode: params.get('recordCode') || '',
-    documentType: params.get('documentType') || '',
-    documentNumber: params.get('documentNumber') || ''
-  };
-}
-
-async function boot() {
-  const { recordCode, documentType, documentNumber } = getParams();
-  backLink?.addEventListener('click', (event) => {
-    event.preventDefault();
-    window.location.assign('./');
-  });
-
-  await checkSession();
-  renderHeaderLogos(logosHeader);
-
-  if (!recordCode || !documentType || !documentNumber) {
-    feedback.textContent = 'No fue posible identificar el RDA solicitado.';
+backButton.addEventListener('click', () => {
+  if (window.history.length > 1) {
+    window.history.back();
     return;
   }
+  window.location.href = '/index.html';
+});
 
-  const patient = await getPatientContext({ documentType, documentNumber });
-  renderPatientHeader(pageAnchor, patient);
-  const detail = await loadCompositionDocument(recordCode);
-  renderDetail(detailPanel, detail);
+async function boot() {
+  try {
+    await checkSession();
+    const searchParams = new URLSearchParams(window.location.search);
+    const recordCode = String(searchParams.get('recordCode') || '').trim();
+    if (!recordCode) throw new Error('No se recibió el registro RDA.');
+    const detail = await loadCompositionDocument(recordCode);
+    renderDetailBlocks(content, detail);
+  } catch (error) {
+    content.innerHTML = `<p class="alert">${String(error.message || 'No fue posible cargar el detalle.')}</p>`;
+  }
 }
 
-boot().catch((error) => {
-  feedback.textContent = error.message || 'No fue posible cargar el detalle.';
-});
+boot();
