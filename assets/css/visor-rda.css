@@ -554,6 +554,55 @@ button.secondary {
 }
 
 
+
+.detail-fields-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(220px, 1fr));
+  gap: 0.9rem;
+}
+
+.field-item-collection {
+  grid-column: 1 / -1;
+}
+
+.collection-list {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.collection-item {
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: #f8fbff;
+  padding: 0.8rem;
+  display: grid;
+  gap: 0.55rem;
+}
+
+.collection-field-row {
+  display: grid;
+  gap: 0.15rem;
+}
+
+.collection-field-label {
+  font-size: 0.78rem;
+  color: var(--text-muted);
+}
+
+.collection-field-value {
+  color: var(--text);
+  word-break: break-word;
+}
+
+.value-box-object {
+  white-space: normal;
+}
+
+.empty-subdivision {
+  margin: 0;
+  color: var(--text-muted);
+}
+
 .detail-page-shell {
   max-width: 1200px;
 }
@@ -606,7 +655,8 @@ button.secondary {
 
 @media (max-width: 860px) {
   .login-shell,
-  .tab-content-grid {
+  .tab-content-grid,
+  .detail-fields-grid {
     grid-template-columns: 1fr;
   }
 

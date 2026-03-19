@@ -17,43 +17,126 @@ function normalizeRdaType(value) {
   if (!raw) return OFFICIAL_RDA_TYPES.PACIENTE;
   if (raw.includes('urg')) return OFFICIAL_RDA_TYPES.URGENCIAS;
   if (raw.includes('hosp')) return OFFICIAL_RDA_TYPES.HOSPITALIZACION;
-  if (raw.includes('paciente') || raw.includes('apoyo')) return OFFICIAL_RDA_TYPES.PACIENTE;
-  if (raw.includes('consulta') || raw.includes('control') || raw.includes('ambulator')) {
+  if (raw.includes('paciente') || raw.includes('apoyo') || raw.includes('control') || raw.includes('procedimiento')) {
+    return OFFICIAL_RDA_TYPES.PACIENTE;
+  }
+  if (raw.includes('consulta') || raw.includes('ambulator')) {
     return OFFICIAL_RDA_TYPES.CONSULTA_EXTERNA;
   }
   return OFFICIAL_RDA_TYPES.PACIENTE;
 }
 
-const DETAIL_GROUPS_BY_TYPE = {
+function field(key, getValue = (detail) => detail[key]) {
+  return { key, getValue };
+}
+
+const DETAIL_SCHEMAS_BY_TYPE = {
   [OFFICIAL_RDA_TYPES.PACIENTE]: [
-    { title: 'Consulta y contexto', fields: ['attentionDate', 'entity', 'municipio', 'serviceProfessional', 'clinicalSummary'] },
-    { title: 'Evaluación clínica', fields: ['procedures', 'observations'] },
-    { title: 'Diagnósticos', fields: ['diagnoses'] },
-    { title: 'Plan y soportes', fields: ['medications', 'documents', 'timeline'] }
+    {
+      title: 'Antecedentes patológicos personales',
+      fields: [field('personalHistory')]
+    },
+    {
+      title: 'Antecedentes farmacológicos',
+      fields: [field('pharmacologicalHistory')]
+    },
+    {
+      title: 'Alergias / intolerancias',
+      fields: [field('allergies')]
+    },
+    {
+      title: 'Antecedentes familiares',
+      fields: [field('familyHistory')]
+    },
+    {
+      title: 'Factores de riesgo',
+      fields: [field('riskFactors')]
+    }
   ],
   [OFFICIAL_RDA_TYPES.CONSULTA_EXTERNA]: [
-    { title: 'Consulta y contexto', fields: ['attentionDate', 'entity', 'municipio', 'serviceProfessional', 'clinicalSummary'] },
-    { title: 'Evaluación clínica', fields: ['procedures', 'observations'] },
-    { title: 'Diagnósticos', fields: ['diagnoses'] },
-    { title: 'Plan y soportes', fields: ['medications', 'documents', 'timeline'] }
+    {
+      title: 'Contexto de la atención',
+      fields: [field('attentionDate'), field('entity'), field('municipio'), field('serviceProfessional'), field('clinicalSummary')]
+    },
+    {
+      title: 'Diagnósticos',
+      fields: [field('diagnoses')]
+    },
+    {
+      title: 'Medicamentos prescritos',
+      fields: [field('medicationsPrescribed', (detail) => detail.medicationsPrescribed || detail.medications)]
+    },
+    {
+      title: 'Alergias',
+      fields: [field('allergies')]
+    },
+    {
+      title: 'Procedimientos',
+      fields: [field('procedures')]
+    }
   ],
   [OFFICIAL_RDA_TYPES.HOSPITALIZACION]: [
-    { title: 'Ingreso y estancia', fields: ['attentionDate', 'entity', 'municipio', 'serviceProfessional', 'clinicalSummary'] },
-    { title: 'Evaluación clínica', fields: ['procedures', 'observations'] },
-    { title: 'Diagnósticos', fields: ['diagnoses'] },
-    { title: 'Plan y egreso', fields: ['medications', 'documents', 'timeline'] }
+    {
+      title: 'Ingreso y estancia',
+      fields: [field('attentionDate'), field('entity'), field('municipio'), field('serviceProfessional'), field('clinicalSummary'), field('timeline')]
+    },
+    {
+      title: 'Diagnósticos',
+      fields: [field('diagnoses')]
+    },
+    {
+      title: 'Medicamentos administrados',
+      fields: [field('medicationsAdministered', (detail) => detail.medicationsAdministered || detail.medications)]
+    },
+    {
+      title: 'Alergias',
+      fields: [field('allergies')]
+    },
+    {
+      title: 'Procedimientos',
+      fields: [field('procedures')]
+    },
+    {
+      title: 'Incapacidad laboral',
+      fields: [field('workDisability')]
+    }
   ],
   [OFFICIAL_RDA_TYPES.URGENCIAS]: [
-    { title: 'Consulta y contexto', fields: ['attentionDate', 'entity', 'municipio', 'serviceProfessional', 'clinicalSummary'] },
-    { title: 'Evaluación clínica', fields: ['procedures', 'observations'] },
-    { title: 'Diagnósticos', fields: ['diagnoses'] },
-    { title: 'Plan y soportes', fields: ['medications', 'documents', 'timeline'] }
+    {
+      title: 'Triage',
+      fields: [field('triage')]
+    },
+    {
+      title: 'Diagnósticos',
+      fields: [field('diagnoses')]
+    },
+    {
+      title: 'Medicamentos administrados',
+      fields: [field('medicationsAdministered', (detail) => detail.medicationsAdministered || detail.medications)]
+    },
+    {
+      title: 'Alergias',
+      fields: [field('allergies')]
+    },
+    {
+      title: 'Procedimientos',
+      fields: [field('procedures')]
+    }
   ]
 };
+
+function buildDetailGroups(detail) {
+  const schema = DETAIL_SCHEMAS_BY_TYPE[detail.type] || DETAIL_SCHEMAS_BY_TYPE[OFFICIAL_RDA_TYPES.PACIENTE];
+  return schema.map((group) => ({
+    title: group.title,
+    fields: group.fields.map((definition) => ({ key: definition.key, value: definition.getValue(detail) }))
+  }));
+}
 
 module.exports = {
   OFFICIAL_RDA_TYPES,
   RDA_TYPE_LABELS,
-  DETAIL_GROUPS_BY_TYPE,
+  DETAIL_SCHEMAS_BY_TYPE,
+  buildDetailGroups,
   normalizeRdaType
 };

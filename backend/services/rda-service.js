@@ -1,7 +1,7 @@
 const fs = require('fs');
 const path = require('path');
 const { all, get } = require('../db/database');
-const { DETAIL_GROUPS_BY_TYPE, RDA_TYPE_LABELS, normalizeRdaType } = require('./rda-schema');
+const { RDA_TYPE_LABELS, buildDetailGroups, normalizeRdaType } = require('./rda-schema');
 
 const MUNICIPALITY_BY_ENTITY = {
   'Clínica Santa Aurora': 'Bogotá',
@@ -42,6 +42,107 @@ function getText(value) {
 function getCodingDisplay(value) {
   const coding = safeArray(value?.coding)[0] || {};
   return coding.display || coding.code || getText(value);
+}
+
+
+function isNonEmpty(value) {
+  if (Array.isArray(value)) return value.length > 0;
+  if (value && typeof value === 'object') return Object.values(value).some(isNonEmpty);
+  return String(value || '').trim().length > 0;
+}
+
+function uniqueCollection(items, uniqueKey) {
+  const seen = new Set();
+  return safeArray(items).filter((item) => {
+    const key = uniqueKey(item);
+    if (!key || seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
+}
+
+function toDiagnosisEntries(items) {
+  return safeArray(items).map((item) => ({
+    code: item.code || 'N/A',
+    description: item.description || 'No registrado'
+  }));
+}
+
+function toMedicationEntries(items, routeLabel) {
+  return safeArray(items).map((item) => ({
+    name: item.name || 'No registrado',
+    dosage: item.dosage || 'No registrado',
+    route: routeLabel || item.route || ''
+  }));
+}
+
+function toAllergyEntries(items) {
+  return safeArray(items).map((item) => ({
+    substance: item.substance || item.name || item.description || 'No registrado',
+    criticality: item.criticality || item.severity || 'No registrado',
+    manifestation: item.manifestation || item.note || 'No registrado'
+  }));
+}
+
+function buildDerivedDetailFields(detail) {
+  const allergies = toAllergyEntries(detail.allergies);
+  const diagnoses = toDiagnosisEntries(detail.diagnoses);
+  const medications = toMedicationEntries(detail.medications);
+  const procedures = safeArray(detail.procedures).map((item) => ({
+    code: item.code || 'N/A',
+    description: item.description || 'No registrado'
+  }));
+  const observations = safeArray(detail.observations).map((item) => item.note || 'No registrado');
+
+  if (detail.type === 'RDA_PACIENTE') {
+    return {
+      personalHistory: diagnoses,
+      pharmacologicalHistory: medications,
+      allergies,
+      familyHistory: safeArray(detail.familyHistory),
+      riskFactors: safeArray(detail.riskFactors).length
+        ? detail.riskFactors
+        : observations.map((note) => ({ factor: note }))
+    };
+  }
+
+  if (detail.type === 'RDA_CONSULTA_EXTERNA') {
+    return {
+      diagnoses,
+      medicationsPrescribed: medications.length ? medications.map((item) => ({ ...item, status: 'Prescrito' })) : [],
+      allergies,
+      procedures
+    };
+  }
+
+  if (detail.type === 'RDA_HOSPITALIZACION') {
+    return {
+      diagnoses,
+      medicationsAdministered: medications.length ? medications.map((item) => ({ ...item, status: 'Administrado' })) : [],
+      allergies,
+      procedures,
+      workDisability: safeArray(detail.workDisability)
+    };
+  }
+
+  if (detail.type === 'RDA_URGENCIAS') {
+    const triage = safeArray(detail.triage).length
+      ? detail.triage
+      : safeArray(detail.observations).slice(0, 1).map((item) => ({
+          category: 'Clasificación inicial',
+          finding: item.note || 'No registrado',
+          source: 'Observación de ingreso'
+        }));
+    return {
+      triage,
+      diagnoses,
+      medicationsAdministered: medications.length ? medications.map((item) => ({ ...item, status: 'Administrado' })) : [],
+      allergies,
+      procedures
+    };
+  }
+
+  return {};
 }
 
 function readMinisterioSampleBundle() {
@@ -87,11 +188,17 @@ function buildObservationMap(bundle) {
 
 function buildMedicationMap(bundle) {
   const groups = {};
-  for (const resource of getBundleEntriesByType(bundle, 'MedicationRequest')) {
-    const encounterId = getReferenceId(resource.encounter?.reference);
-    if (!encounterId) continue;
-    groups[encounterId] = groups[encounterId] || [];
-    groups[encounterId].push(resource);
+  for (const resourceType of ['MedicationRequest', 'MedicationAdministration']) {
+    for (const resource of getBundleEntriesByType(bundle, resourceType)) {
+      const encounterId = getReferenceId(resource.encounter?.reference || resource.context?.reference);
+      if (!encounterId) continue;
+      groups[encounterId] = groups[encounterId] || [];
+      groups[encounterId].push({
+        medicationCodeableConcept: resource.medicationCodeableConcept,
+        dosageInstruction: resource.dosageInstruction,
+        dosage: resource.dosage ? [{ text: resource.dosage.text || getText(resource.dosage.route) }] : []
+      });
+    }
   }
   return groups;
 }
@@ -125,6 +232,101 @@ function buildDocumentReferenceMap(bundle) {
     if (!encounterId) continue;
     groups[encounterId] = groups[encounterId] || [];
     groups[encounterId].push(resource);
+  }
+  return groups;
+}
+
+
+function buildAllergyMap(bundle) {
+  const byEncounter = {};
+  const byPatient = {};
+  for (const resource of getBundleEntriesByType(bundle, 'AllergyIntolerance')) {
+    const encounterId = getReferenceId(resource.encounter?.reference);
+    const patientId = getReferenceId(resource.patient?.reference);
+    const mapped = {
+      substance: getCodingDisplay(resource.code) || 'No registrado',
+      criticality: resource.criticality || 'No registrado',
+      manifestation: safeArray(resource.reaction)[0]?.manifestation?.map(getCodingDisplay).filter(Boolean).join(', ') || 'No registrado'
+    };
+    if (encounterId) {
+      byEncounter[encounterId] = byEncounter[encounterId] || [];
+      byEncounter[encounterId].push(mapped);
+    }
+    if (patientId) {
+      byPatient[patientId] = byPatient[patientId] || [];
+      byPatient[patientId].push(mapped);
+    }
+  }
+  return { byEncounter, byPatient };
+}
+
+function buildClaimMap(bundle) {
+  const groups = {};
+  for (const resource of getBundleEntriesByType(bundle, 'Claim')) {
+    const encounterId = getReferenceId(resource.encounter?.reference);
+    if (!encounterId) continue;
+    groups[encounterId] = groups[encounterId] || [];
+    groups[encounterId].push({
+      reason: getCodingDisplay(resource.type) || getText(resource.use) || 'No registrado',
+      status: resource.status || 'No registrado'
+    });
+  }
+  return groups;
+}
+
+function buildFamilyHistoryMap(bundle) {
+  const groups = {};
+  for (const resource of getBundleEntriesByType(bundle, 'FamilyMemberHistory')) {
+    const patientId = getReferenceId(resource.patient?.reference);
+    if (!patientId) continue;
+    groups[patientId] = groups[patientId] || [];
+    groups[patientId].push({
+      relationship: getCodingDisplay(resource.relationship) || 'No registrado',
+      condition: safeArray(resource.condition).map((item) => getCodingDisplay(item.code)).filter(Boolean).join(', ') || 'No registrado'
+    });
+  }
+  return groups;
+}
+
+function buildMedicationStatementMap(bundle) {
+  const groups = {};
+  for (const resource of getBundleEntriesByType(bundle, 'MedicationStatement')) {
+    const patientId = getReferenceId(resource.subject?.reference);
+    if (!patientId) continue;
+    groups[patientId] = groups[patientId] || [];
+    groups[patientId].push({
+      name: getCodingDisplay(resource.medicationCodeableConcept) || 'No registrado',
+      dosage: safeArray(resource.dosage)[0]?.text || 'No registrado'
+    });
+  }
+  return groups;
+}
+
+function buildPatientConditionMap(bundle) {
+  const groups = {};
+  for (const resource of getBundleEntriesByType(bundle, 'Condition')) {
+    const patientId = getReferenceId(resource.subject?.reference);
+    if (!patientId) continue;
+    groups[patientId] = groups[patientId] || [];
+    groups[patientId].push({
+      code: safeArray(resource.code?.coding)[0]?.code || 'N/A',
+      description: getCodingDisplay(resource.code) || 'No registrado'
+    });
+  }
+  return groups;
+}
+
+function buildRiskFactorMap(bundle) {
+  const groups = {};
+  for (const resource of getBundleEntriesByType(bundle, 'Observation')) {
+    const patientId = getReferenceId(resource.subject?.reference);
+    const categoryText = safeArray(resource.category).map(getCodingDisplay).join(' ').toLowerCase();
+    if (!patientId || (!categoryText.includes('social') && !categoryText.includes('risk'))) continue;
+    groups[patientId] = groups[patientId] || [];
+    groups[patientId].push({
+      factor: getCodingDisplay(resource.code) || 'No registrado',
+      value: getText(resource.valueString) || getText(resource.valueCodeableConcept) || getText(resource.valueQuantity) || 'No registrado'
+    });
   }
   return groups;
 }
@@ -189,6 +391,12 @@ function mapMinisterioBundleToDetail(bundle, recordCode) {
   const procedureMap = buildProcedureMap(bundle);
   const conditionMap = buildConditionMap(bundle);
   const documentReferenceMap = buildDocumentReferenceMap(bundle);
+  const allergyMap = buildAllergyMap(bundle);
+  const claimMap = buildClaimMap(bundle);
+  const familyHistoryMap = buildFamilyHistoryMap(bundle);
+  const medicationStatementMap = buildMedicationStatementMap(bundle);
+  const patientConditionMap = buildPatientConditionMap(bundle);
+  const riskFactorMap = buildRiskFactorMap(bundle);
   const compositions = getBundleEntriesByType(bundle, 'Composition');
 
   const resource = compositions.find((item) => (item.identifier?.[0]?.value || item.id) === recordCode)
@@ -199,6 +407,7 @@ function mapMinisterioBundleToDetail(bundle, recordCode) {
     ? resource
     : encounterMap[getReferenceId(resource.encounter?.reference)] || null;
   const encounterId = encounter?.id || getReferenceId(resource.encounter?.reference);
+  const patientId = getReferenceId(resource.subject?.reference || encounter?.subject?.reference);
   const organization = organizationMap[getReferenceId(resource.custodian?.reference || encounter?.serviceProvider?.reference)] || null;
   const diagnoses = safeArray(conditionMap[encounterId]).map((item) => ({
     code: safeArray(item.code?.coding)[0]?.code || 'N/A',
@@ -245,6 +454,12 @@ function mapMinisterioBundleToDetail(bundle, recordCode) {
     observations,
     documents,
     timeline,
+    allergies: uniqueCollection([...(allergyMap.byEncounter[encounterId] || []), ...(allergyMap.byPatient[patientId] || [])], (item) => `${item.substance}|${item.manifestation}`),
+    workDisability: safeArray(claimMap[encounterId]),
+    familyHistory: safeArray(familyHistoryMap[patientId]),
+    personalHistory: safeArray(patientConditionMap[patientId]),
+    pharmacologicalHistory: safeArray(medicationStatementMap[patientId]),
+    riskFactors: safeArray(riskFactorMap[patientId]),
     composition: {
       profile: resource.resourceType,
       status: resource.status || 'final',
@@ -252,9 +467,10 @@ function mapMinisterioBundleToDetail(bundle, recordCode) {
     }
   });
 
+  const enriched = { ...detail, ...buildDerivedDetailFields(detail) };
   return {
-    ...detail,
-    groups: buildDetailGroups(detail)
+    ...enriched,
+    groups: buildDetailGroups(enriched)
   };
 }
 
@@ -307,14 +523,6 @@ async function listPatientRdas(db, patientId, filters = {}) {
   return mapped.filter((row) => row.type === filters.rdaType);
 }
 
-function buildDetailGroups(detail) {
-  const groups = DETAIL_GROUPS_BY_TYPE[detail.type] || DETAIL_GROUPS_BY_TYPE.RDA_PACIENTE;
-  return groups.map((group) => ({
-    title: group.title,
-    fields: group.fields.map((field) => ({ key: field, value: detail[field] }))
-  }));
-}
-
 async function getRdaDetail(db, recordCode) {
   const base = await get(
     db,
@@ -347,12 +555,21 @@ async function getRdaDetail(db, recordCode) {
       observations,
       documents,
       timeline,
+      allergies: [],
+      workDisability: [],
+      familyHistory: [],
+      personalHistory: [],
+      pharmacologicalHistory: [],
+      riskFactors: [],
+      triage: [],
       composition: composition || null
     });
 
+    const enriched = { ...detail, ...buildDerivedDetailFields(detail) };
+
     return {
-      ...detail,
-      groups: buildDetailGroups(detail)
+      ...enriched,
+      groups: buildDetailGroups(enriched)
     };
   }
 
