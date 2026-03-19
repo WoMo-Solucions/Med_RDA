@@ -6,7 +6,7 @@ const state = {
   documentTypes: [],
   allRdas: [],
   selectedRda: null,
-  detailView: 'popup',
+  detailOpenMode: window.localStorage.getItem(DETAIL_OPEN_MODE_KEY) || 'modal',
   filters: {
     fromDate: '',
     toDate: '',
