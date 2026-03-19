@@ -59,7 +59,29 @@
               "event": "Alta con recomendaciones"
             }
           ],
-          "municipio": "Bogotá"
+          "municipio": "Bogotá",
+          "healthBackground": [
+            "Asma intermitente",
+            "Tos de 4 días de evolución"
+          ],
+          "allergies": [
+            "Alergia a penicilina"
+          ],
+          "administeredTechnologies": [
+            "Oxigenoterapia por cánula nasal"
+          ],
+          "dischargeMedications": [
+            "Salbutamol inhalado",
+            "Acetaminofén 500 mg"
+          ],
+          "dischargeProcedures": [
+            "Control por medicina general en 48 horas"
+          ],
+          "dischargeTechnologies": [
+            "Educación en signos de alarma"
+          ],
+          "dischargeProfessional": "Dra. Paula Sánchez",
+          "incapacity": "No registra incapacidad"
         },
         {
           "id": "rda-1002",
@@ -100,7 +122,14 @@
               "event": "Evaluación clínica"
             }
           ],
-          "municipio": "Cali"
+          "municipio": "Cali",
+          "healthBackground": [
+            "Hipertensión arterial esencial"
+          ],
+          "allergies": [
+            "Sin alergias conocidas"
+          ],
+          "incapacity": "No registra incapacidad"
         },
         {
           "id": "rda-1003",
@@ -150,7 +179,25 @@
               "event": "Traslado a recuperación"
             }
           ],
-          "municipio": "Medellín"
+          "municipio": "Medellín",
+          "healthBackground": [
+            "Antecedente de colelitiasis"
+          ],
+          "allergies": [
+            "Sin alergias conocidas"
+          ],
+          "dischargeMedications": [
+            "Cefazolina",
+            "Ketorolaco"
+          ],
+          "dischargeProcedures": [
+            "Control por cirugía general en 7 días"
+          ],
+          "dischargeTechnologies": [
+            "Recomendaciones de cuidado de herida"
+          ],
+          "dischargeProfessional": "Dr. Andrés Peña",
+          "incapacity": "Incapacidad por 10 días"
         },
         {
           "id": "rda-1004",
@@ -192,7 +239,16 @@
               "event": "Entrega de informe"
             }
           ],
-          "municipio": "Bucaramanga"
+          "municipio": "Bucaramanga",
+          "healthBackground": [
+            "Colecistectomía reciente"
+          ],
+          "historicalMedications": [
+            "Ketorolaco"
+          ],
+          "allergies": [
+            "Sin alergias conocidas"
+          ]
         }
       ]
     },
