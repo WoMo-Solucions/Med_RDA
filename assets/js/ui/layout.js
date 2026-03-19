@@ -96,10 +96,13 @@ export function setViewerVisibility(showViewer) {
 export function setAuthVisibility(isLoggedIn) {
   const panel = document.getElementById('auth-panel');
   if (panel) panel.classList.toggle('hidden', isLoggedIn);
+<<<<<<< codex/finalize-system-implementation-and-hardening-016t2o
+=======
 }
 
 export function setAuthVisibility(isLoggedIn) {
   document.getElementById('auth-panel').classList.toggle('hidden', isLoggedIn);
+>>>>>>> main
 }
 
 export function showIdentifyMessage(message, isError = false) {
