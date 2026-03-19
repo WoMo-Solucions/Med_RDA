@@ -26,7 +26,6 @@ export function renderAuthForm(container, onSubmit) {
       </div>
     </div>
   `;
-
   container.querySelector('#auth-form').addEventListener('submit', (event) => {
     event.preventDefault();
     const data = new FormData(event.currentTarget);
